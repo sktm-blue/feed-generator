@@ -4,11 +4,12 @@ import { AppContext } from '../config'
 import { REPLY_FLAG } from '../const'
 import { trace, traceerr } from '../trace'
 
+// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 // max 15 chars
 export const shortname: string = 'skyfeedja'
 
 // 固定ポストのURI
-// 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriに記載されている
+// 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriをコピーする
 // 画面ではこの配列の逆順に表示される(一番下のものが一番上に表示される)
 const fixedPostUris: string[] = [
 	'at://did:plc:wdoyybvxbazpbpxpvyntlzsq/app.bsky.feed.post/3klcbmbb2r623'

@@ -1,5 +1,8 @@
+// このファイルは以下サイトのコードを使用させて頂いてます
+// https://qiita.com/tonkotsuboy_com/items/7443ffb6351e6bd2526b
+
 /** デバッグモードかどうか。本番公開時にはfalseにする */
-const DEBUG_MODE:boolean = true;
+const DEBUG_MODE:boolean = false;
 
 /**
  * デバッグモードが有効で、console.log()が使える時に、

@@ -1,3 +1,6 @@
+// このファイルは以下サイトのコードを使用させて頂いてます
+// https://blog.estampie.work/archives/2972
+
 // フィード作成前の投稿もDBに追加するスクリプト
 import https from 'https';
 import dotenv from 'dotenv';
@@ -25,15 +28,14 @@ async function fetchSearchResults(query: string, limit: number = 100, cursor: st
 					trace('JSON.parse start');
 					const result = JSON.parse(data);
 					trace('JSON.parse end length = ' + result.posts.length);
-					/*
+					
 					if (result.cursor && result.posts.length > 0) {
 						const nextResults = await fetchSearchResults(query, limit, result.cursor);
 						resolve([...result.posts, ...nextResults]);
 					} else {
 						resolve(result.posts);
 					}
-					*/
-					resolve(result.posts);
+					//resolve(result.posts);	// 1回分だけ登録する(上記if文をコメントアウトして使用)
 					
 				} catch (error) {
 					reject(error);
