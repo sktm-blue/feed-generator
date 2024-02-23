@@ -6,7 +6,7 @@ import { trace, traceerr } from '../trace'
 
 // Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 // max 15 chars
-export const shortname: string = 'skyfeedall'
+export const shortname: string = 'omegacraall'
 
 // 固定ポストのURI
 // 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriをコピーする
@@ -33,8 +33,7 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 	let builder = ctx.db
 		.selectFrom('post')
 		.selectAll()
-		.where('lang1', '=', 'ja')				// 日本語の投稿のみ
-		.where('text', 'like', '%skyfeed%') 	// 部分一致検索
+		.where('text', 'regexp', 'omega.{0,1}crafter|オメガクラフター') 	// 正規表現検索
 		.orderBy('indexedAt', 'desc')	// 日時でソート(降順)
 		.orderBy('cid', 'desc')			// cidでソート(降順)
 		.limit(params.limit)

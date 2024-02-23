@@ -6,12 +6,13 @@ import { trace, traceerr } from '../trace'
 
 // Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 // max 15 chars
-export const shortname: string = 'skyfeedall'
+export const shortname: string = 'palimageja'
 
 // 固定ポストのURI
 // 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriをコピーする
 // 画面ではこの配列の逆順に表示される(一番下のものが一番上に表示される)
 const fixedPostUris: string[] = [
+	'at://did:plc:wdoyybvxbazpbpxpvyntlzsq/app.bsky.feed.post/3kl7vfd2uda24'
 ]
 
 // リプライを表示させるか
@@ -33,8 +34,9 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 	let builder = ctx.db
 		.selectFrom('post')
 		.selectAll()
-		.where('lang1', '=', 'ja')				// 日本語の投稿のみ
-		.where('text', 'like', '%skyfeed%') 	// 部分一致検索
+		.where('lang1', '=', 'ja')		// 日本語の投稿のみ
+		.where('text', 'regexp', 'パルワ|palworld') 	// 正規表現検索
+		.where('imageCount', '>', 0) 	// 画像1枚以上
 		.orderBy('indexedAt', 'desc')	// 日時でソート(降順)
 		.orderBy('cid', 'desc')			// cidでソート(降順)
 		.limit(params.limit)

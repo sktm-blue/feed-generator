@@ -1,16 +1,16 @@
 // 検索クエリのリスト
-/*
-export const INSERT_WORDS = [
-	'猫', 
-	'犬', 
-	'cat', 
-	'dog'
-	]
-*/
-
 export const INSERT_WORDS = [
 	'skyfeed',
-	'bluefeed'
+	'raft',
+	'ラフト',
+	'cities',
+	'シティーズ',
+	'omega',
+	'オメガクラフター',
+	'satisfactory',
+	'サティスファクトリー',
+	'palworld',
+	'パルワ',
 ]
 
 export const INSERT_ACCOUNTS = [

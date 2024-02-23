@@ -12,7 +12,6 @@ export const shortname: string = 'skyfeedja'
 // 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriをコピーする
 // 画面ではこの配列の逆順に表示される(一番下のものが一番上に表示される)
 const fixedPostUris: string[] = [
-	'at://did:plc:wdoyybvxbazpbpxpvyntlzsq/app.bsky.feed.post/3klcbmbb2r623'
 ]
 
 // リプライを表示させるか
@@ -26,7 +25,8 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 	// DBから指定した条件のポストを検索する
 	// ここの「.selectAll()」と「.limit(params.limit)」の間に検索条件を書く
 	// .where('lang1', '=', 'ja')		-> 日本語の投稿のみ
-	// .where('text', 'like', likeStr) 	-> 部分一致検索
+	// .where('text', 'like', '%ラーメン%') 	-> 部分一致検索
+	// .where('text', 'regexp', 'うどん|そば') 	-> 正規表現検索
 	// .orderBy('indexedAt', 'desc')	-> 日時でソート(降順)
 	// .orderBy('cid', 'desc')			-> cidでソート(降順)
 	// ※DBへの格納時に小文字への変換を行っているため、ここでは大文字小文字の処理をしない
@@ -36,9 +36,8 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 		// 日本語で「skyfeed」を含む投稿か、SkyFeed Appの投稿か、redsolverさんの投稿を抽出する
 		.where(({ eb, or, and }) => or([
 			and([
-				eb('lang1', '=', 'ja'),				// 日本語の投稿のみv
-				//eb('text', 'like', '%skyfeed%') 		// 部分一致検索
-				eb('text', 'regexp', 'skyfeed|bluefeed') 		// 部分一致検索
+				eb('lang1', '=', 'ja'),				// 日本語の投稿のみ
+				eb('text', 'like', '%skyfeed%') 	// 部分一致検索
 			]),
 			eb('uri', 'like', 'at://did:plc:dalmbmm5x75vfp3gysgp3vzl%'),	// SkyFeed App
 			eb('uri', 'like', 'at://did:plc:odo2zkpujsgcxtz7ph24djkj%')		// redsolverさん
