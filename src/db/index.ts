@@ -4,9 +4,14 @@ import { DatabaseSchema } from './schema'
 import { migrationProvider } from './migrations'
 
 export const createDb = (location: string): Database => {
+
+  let sqdb = new SqliteDb(location)
+  sqdb.loadExtension('./regexp')    // 正規表現ライブラリの読み込み
+  
   return new Kysely<DatabaseSchema>({
     dialect: new SqliteDialect({
-      database: new SqliteDb(location),
+      //database: new SqliteDb(location),
+      database: sqdb,
     }),
   })
 }

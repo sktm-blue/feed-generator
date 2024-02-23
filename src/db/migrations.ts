@@ -14,9 +14,14 @@ migrations['001'] = {
       .createTable('post')
       .addColumn('uri', 'varchar', (col) => col.primaryKey())
       .addColumn('cid', 'varchar', (col) => col.notNull())
+      .addColumn('text', 'text', (col) => col.notNull())    // text
+      .addColumn('lang1', 'text', (col) => col.notNull())    // lang1
+      .addColumn('lang2', 'text', (col) => col.notNull())    // lang2
+      .addColumn('lang3', 'text', (col) => col.notNull())    // lang3
       .addColumn('replyParent', 'varchar')
       .addColumn('replyRoot', 'varchar')
       .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+      .addColumn('imageCount', 'integer')    // imageCount
       .execute()
     await db.schema
       .createTable('sub_state')

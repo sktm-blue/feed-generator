@@ -1,14 +1,18 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
+import { trace, traceerr } from '../trace'
 
 // max 15 chars
-export const shortname = 'whats-alf'
+export const shortname = 'newgearall'
+const likeStr = '%new gear%'
 
 export const handler = async (ctx: AppContext, params: QueryParams) => {
+
 	let builder = ctx.db
 		.selectFrom('post')
 		.selectAll()
+		.where('text', 'like', likeStr) // DBに取り込んだ投稿からさらにフィルタリングの条件を追加
 		.orderBy('indexedAt', 'desc')
 		.orderBy('cid', 'desc')
 		.limit(params.limit)
@@ -31,6 +35,7 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 			// <<< 
 			.where('post.cid', '<', cid)
 	}
+
 	const res = await builder.execute()
 
 	const feed = res.map((row) => ({

@@ -3,14 +3,23 @@ import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
 
 // max 15 chars
-export const shortname = 'whats-alf'
+export const shortname = 'newgearja'
 
 export const handler = async (ctx: AppContext, params: QueryParams) => {
+
+	// DBから指定した条件のポストを検索する
+	// ここの「.selectAll()」と「.limit(params.limit)」の間に検索条件を書く
+	// .where('lang1', '=', 'ja')		-> 日本語の投稿のみ
+	// .where('text', 'like', likeStr) 	-> 部分一致検索
+	// .orderBy('indexedAt', 'desc')	-> 日時でソート(降順)
+	// .orderBy('cid', 'desc')			-> cidでソート(降順)
 	let builder = ctx.db
 		.selectFrom('post')
 		.selectAll()
-		.orderBy('indexedAt', 'desc')
-		.orderBy('cid', 'desc')
+		.where('lang1', '=', 'ja')		// 日本語の投稿のみ
+		.where('text', 'like', '%new gear%') // 部分一致検索
+		.orderBy('indexedAt', 'desc')	// 日時でソート(降順)
+		.orderBy('cid', 'desc')			// cidでソート(降順)
 		.limit(params.limit)
 
 	if (params.cursor) {
@@ -31,6 +40,7 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 			// <<< 
 			.where('post.cid', '<', cid)
 	}
+
 	const res = await builder.execute()
 
 	const feed = res.map((row) => ({
