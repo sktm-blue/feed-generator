@@ -1,55 +1,44 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { AppContext } from '../config'
-import { trace, traceerr } from '../trace'
+import { REPLY_FLAG } from '../const'
+import { AlgoAbstract } from './algo-abstract'
+import { Database } from '../db';
 
-// max 15 chars
-export const shortname = 'newgearall'
-const likeStr = '%new gear%'
-
-export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
-
-	let builder = ctx.db
-		.selectFrom('post')
-		.selectAll()
-		.where('text', 'like', likeStr) // DBに取り込んだ投稿からさらにフィルタリングの条件を追加
-		.orderBy('indexedAt', 'desc')
-		.orderBy('cid', 'desc')
-		.limit(params.limit)
-
-	if (params.cursor) {
-		const [indexedAt, cid] = params.cursor.split('::')
-		if (!indexedAt || !cid) {
-			throw new InvalidRequestError('malformed cursor')
-		}
-		const timeStr = new Date(parseInt(indexedAt, 10)).toISOString()
-		builder = builder
-			// >>> for kysely 0.22.0
-			//.where('post.indexedAt', '<', timeStr)
-			//.orWhere((qb) => qb.where('post.indexedAt', '=', timeStr))
-			// <<< 
-			// >>> for kysely 0.27.0
-			.where((eb) =>
-				eb('post.indexedAt', '<', timeStr).or('post.indexedAt', '=', timeStr)
-			)
-			// <<< 
-			.where('post.cid', '<', cid)
+class AlgoImpl extends AlgoAbstract {
+	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
+	// max 15 chars
+	public getShortname(): string {
+		return 'newgearall'
+	}
+	
+	// 固定ポストのURI
+	// 取得方法は、SkyFeedで該当ポストを開き、Copy JSONで得られるJSON内のuriをコピーする
+	// 画面ではこの配列の逆順に表示される(一番下のものが一番上に表示される)
+	protected getFixedPostUris(): string[] {
+		return []
 	}
 
-	const res = await builder.execute()
-
-	const feed = res.map((row) => ({
-		post: row.uri,
-	}))
-
-	let cursor: string | undefined
-	const last = res.at(-1)
-	if (last) {
-		cursor = `${new Date(last.indexedAt).getTime()}::${last.cid}`
+	// リプライを表示させるか
+	// REPLY_FLAG.NO_DISPLAY : 表示させない
+	// REPLY_FLAG.ONLY_OWN_REPLY : 自分自身へのリプライのみ表示させる
+	// REPLY_FLAG.ALL_REPLY : 全てのリプライを表示させる
+	protected getReplyFlag(): number {
+		return REPLY_FLAG.ONLY_OWN_REPLY
 	}
-
-	return {
-		cursor,
-		feed,
+	
+	// 検索条件を記述
+	// .where('lang1', '=', 'ja')		-> 日本語の投稿のみ
+	// .where('text', 'like', '%ラーメン%') 	-> 部分一致検索
+	// .where('text', 'regexp', 'うどん|そば') 	-> 正規表現検索
+	// .orderBy('indexedAt', 'desc')	-> 日時でソート(降順)
+	// .orderBy('cid', 'desc')			-> cidでソート(降順)
+	// ※DBへの格納時に小文字への変換を行っているため、ここでは大文字小文字の処理をしない
+	protected getBuilder(db: Database): any {
+		return db
+			.selectFrom('post')
+			.selectAll()
+			.where('text', 'like', '%new gear%')
+			.orderBy('indexedAt', 'desc')
+			.orderBy('cid', 'desc')
 	}
 }
+
+export const newgearall: AlgoAbstract = new AlgoImpl()

@@ -3,35 +3,42 @@ import {
 	QueryParams,
 	OutputSchema as AlgoOutput,
 } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import * as whatsAlf from './whats-alf'
-import * as cities from './citiesja'
-import * as cat from './cat'
-import * as newgearall from './newgearall'
-import * as newgearja from './newgearja'
-import * as skyfeedall from './skyfeedall'
-import * as skyfeedja from './skyfeedja'
-import * as raftja from './raftja'
-import * as citiesja from './citiesja'
-import * as omegacraall from './omegacraall'
-import * as omegacraja from './omegacraja'
-import * as satisfactoryja from './satisfactoryja'
-import * as palimageja from './palimageja'
+import { AlgoAbstract } from './algo-abstract'
 
-type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
+//import { whatsAlf } from './whats-alf'
+//import { cities } from './citiesja'
+//import { cat } from './cat'
+import { newgearall } from './newgearall'
+import { newgearja } from './newgearja'
+import { skyfeedall } from './skyfeedall'
+import { skyfeedja } from './skyfeedja'
+import { raftja } from './raftja'
+import { citiesja } from './citiesja'
+import { omegacraall } from './omegacraall'
+import { omegacraja } from './omegacraja'
+import { satisfactoryja } from './satisfactoryja'
+import { palimageja } from './palimageja'
 
-const algos: Record<string, AlgoHandler> = {
-//	[whatsAlf.shortname]: whatsAlf.handler,
-//	[cat.shortname]: cat.handler,
-//	[newgearall.shortname]: newgearall.handler,
-//	[newgearja.shortname]: newgearja.handler,
-	[skyfeedall.shortname]: skyfeedall.handler,
-	[skyfeedja.shortname]: skyfeedja.handler,
-	[raftja.shortname]: raftja.handler,
-	[citiesja.shortname]: citiesja.handler,
-	[omegacraall.shortname]: omegacraall.handler,
-	[omegacraja.shortname]: omegacraja.handler,
-	[satisfactoryja.shortname]: satisfactoryja.handler,
-	[palimageja.shortname]: palimageja.handler,
+const algoArray: AlgoAbstract[] = [
+	newgearall,
+	newgearja,
+	skyfeedall,
+	skyfeedja,
+	raftja,
+	citiesja,
+	omegacraall,
+	omegacraja,
+	satisfactoryja,
+	palimageja,
+]
+
+type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
+
+export function getAlgos(): Record<string, AlgoHandler> {
+	let record: Record<string, AlgoHandler> = {}
+	for (const algo of algoArray) {
+		record[algo.getShortname()] = algo.handler
+	}
+	return record
 }
 
-export default algos

@@ -73,8 +73,6 @@ async function fetchSearchResults(query: string, limit: number = 100, cursor: st
 						// 1回分だけ登録する
 						resolve(resultDataArray)
 					}
-					
-					trace('resultDataArray.length = ' + resultDataArray.length)					
 				} catch (error) {
 					reject(error)
 				}
@@ -125,8 +123,6 @@ async function fetchActorSearchResults(actor: string, limit: number = 100, curso
 						}
 						resultDataArray.push(resultData)
 					}
-
-					trace('JSON.parse end length = ' + result.feed.length)
 					
 					if (process.env.FEEDGEN_SEARCHTODB_ALL === 'true') {
 						if (result.cursor && resultDataArray.length > 0) {
