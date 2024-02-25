@@ -20,7 +20,7 @@ const fixedPostUris: string[] = [
 // REPLY_FLAG.ALL_REPLY : 全てのリプライを表示させる
 const replyFlag: number = REPLY_FLAG.ONLY_OWN_REPLY
 
-export const handler = async (ctx: AppContext, params: QueryParams) => {
+export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 	// DBから指定した条件のポストを検索する
 	// ここの「.selectAll()」と「.limit(params.limit)」の間に検索条件を書く

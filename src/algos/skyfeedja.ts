@@ -3,6 +3,7 @@ import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
 import { REPLY_FLAG } from '../const'
 import { trace, traceerr } from '../trace'
+import { AtUri } from '@atproto/syntax'
 
 // Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 // max 15 chars
@@ -20,7 +21,7 @@ const fixedPostUris: string[] = [
 // REPLY_FLAG.ALL_REPLY : 全てのリプライを表示させる
 const replyFlag: number = REPLY_FLAG.ONLY_OWN_REPLY
 
-export const handler = async (ctx: AppContext, params: QueryParams) => {
+export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 	// DBから指定した条件のポストを検索する
 	// ここの「.selectAll()」と「.limit(params.limit)」の間に検索条件を書く
@@ -75,9 +76,10 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
 			if (row.replyParent != null && row.replyParent.length > 0) {
 				// リプライの場合
 				if (replyFlag == REPLY_FLAG.ONLY_OWN_REPLY) {
-					const splitIndex: number = row.uri.indexOf('app.bsky')
-					const splitStr: string = row.uri.substring(0, splitIndex)
-					return row.replyParent.includes(splitStr)	// 自分自身へのリプライの場合は表示させる
+					//const splitIndex: number = row.uri.indexOf('app.bsky')
+					//const splitStr: string = row.uri.substring(0, splitIndex)
+					//return row.replyParent.includes(splitStr)	// 自分自身へのリプライの場合は表示させる
+					return row.replyParent.includes(new AtUri(row.uri).hostname)	// 自分自身へのリプライの場合は表示させる
 				} else {
 					return false	// リプライを表示させない
 				}

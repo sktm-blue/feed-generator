@@ -5,7 +5,7 @@ import { AppContext } from '../config'
 // max 15 chars
 export const shortname = 'newgearja'
 
-export const handler = async (ctx: AppContext, params: QueryParams) => {
+export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 	// DBから指定した条件のポストを検索する
 	// ここの「.selectAll()」と「.limit(params.limit)」の間に検索条件を書く

@@ -17,7 +17,7 @@ import * as omegacraja from './omegacraja'
 import * as satisfactoryja from './satisfactoryja'
 import * as palimageja from './palimageja'
 
-type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
+type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
 
 const algos: Record<string, AlgoHandler> = {
 //	[whatsAlf.shortname]: whatsAlf.handler,

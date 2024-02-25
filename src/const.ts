@@ -1,6 +1,8 @@
 // 検索クエリのリスト
 export const INSERT_WORDS = [
-	'skyfeed',
+	'feed',
+	/*
+	'フィード',
 	'raft',
 	'ラフト',
 	'cities',
@@ -11,11 +13,12 @@ export const INSERT_WORDS = [
 	'サティスファクトリー',
 	'palworld',
 	'パルワ',
+	*/
 ]
 
-export const INSERT_ACCOUNTS = [
+export const INSERT_ACTORS = [
 	'did:plc:dalmbmm5x75vfp3gysgp3vzl',		// SkyFeed App
-	'did:plc:odo2zkpujsgcxtz7ph24djkj'		// redsolverさん
+	//'did:plc:odo2zkpujsgcxtz7ph24djkj'		// redsolverさん
 ]
 	
 export const REPLY_FLAG = Object.freeze({

@@ -3,7 +3,7 @@ import {
 	isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
-import { INSERT_WORDS, INSERT_ACCOUNTS } from './const'
+import { INSERT_WORDS, INSERT_ACTORS } from './const'
 import { trace, traceerr } from './trace'
 
 import * as AppBskyEmbedImages from './lexicon/types/app/bsky/embed/images'
@@ -41,8 +41,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 				for (const insertWord of INSERT_WORDS) {
 					includeFlag = includeFlag || textLower.includes(insertWord.toLowerCase())
 				}
-				for (const insertAccount of INSERT_ACCOUNTS) {
-					includeFlag = includeFlag || create.uri.includes(insertAccount)
+				for (const insertActor of INSERT_ACTORS) {
+					includeFlag = includeFlag || create.uri.includes(insertActor)
 				}
 				return includeFlag
 			})

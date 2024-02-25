@@ -8,7 +8,7 @@ export const shortname = 'cat'
 //const likeStr = '%猫%'
 const likeStr = '%cat%'
 
-export const handler = async (ctx: AppContext, params: QueryParams) => {
+export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 	let builder = ctx.db
 		.selectFrom('post')

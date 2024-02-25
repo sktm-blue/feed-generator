@@ -19,17 +19,17 @@ export default function (server: Server, ctx: AppContext) {
         'UnsupportedAlgorithm',
       )
     }
+
     /**
      * Example of how to check auth if giving user-specific results:
-     *
-     * const requesterDid = await validateAuth(
-     *   req,
-     *   ctx.cfg.serviceDid,
-     *   ctx.didResolver,
-     * )
      */
+    const requesterDid = await validateAuth(
+      req,
+      ctx.cfg.serviceDid,
+      ctx.didResolver,
+    )
 
-    const body = await algo(ctx, params)
+    const body = await algo(ctx, params, requesterDid)
     return {
       encoding: 'application/json',
       body: body,

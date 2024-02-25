@@ -7,7 +7,7 @@ import { trace, traceerr } from '../trace'
 export const shortname = 'newgearall'
 const likeStr = '%new gear%'
 
-export const handler = async (ctx: AppContext, params: QueryParams) => {
+export const handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 	let builder = ctx.db
 		.selectFrom('post')
