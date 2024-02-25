@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
 import { REPLY_FLAG } from '../const'
-import { trace, traceerr } from '../trace'
+import { traceDebug, traceInfo, traceError } from '../trace'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db';
 
@@ -25,7 +25,6 @@ export abstract class AlgoAbstract {
 	protected abstract getBuilder(db: Database): any
 
 	public handler = async (ctx: AppContext, params: QueryParams) => {
-
 		let builder = this.getBuilder(ctx.db).limit(params.limit)
 
 		if (params.cursor) {
@@ -75,8 +74,8 @@ export abstract class AlgoAbstract {
 		// ***デバッグ用
 		/*
 		for (const resItem of filteredRes) {
-			trace(resItem.text)
-			trace('------------------------------')
+			traceDebug(resItem.text)
+			traceDebug('------------------------------')
 		}
 		*/
 		// ***

@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
-import { trace, traceerr } from '../trace'
+import { traceDebug, traceInfo, traceError } from '../trace'
 
 // max 15 chars
 export const shortname = 'cat'
