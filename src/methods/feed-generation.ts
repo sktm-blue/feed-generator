@@ -4,6 +4,7 @@ import { AppContext } from '../config'
 import { Algos } from '../algos'
 import { validateAuth } from '../auth'
 import { AtUri } from '@atproto/syntax'
+import { Trace } from '../trace'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
@@ -31,6 +32,9 @@ export default function (server: Server, ctx: AppContext) {
     */
 
     const body = await algo(ctx, params)
+
+    Trace.info('fg ' + feedUri.rkey)
+
     return {
       encoding: 'application/json',
       body: body,
