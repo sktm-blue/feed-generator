@@ -204,8 +204,9 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 						// 投稿タイプ		
 						let postType: number = Util.getPostType(data.uri, data.replyParent)
 
-						// デバッグモードの時のみtextに挿入を行う
-						const insertText: string = (process.env.FEEDGEN_DEBUG_MODE === 'true') ? textLower : ''
+						// 正規表現使用時のみtextに挿入を行う
+						const useRegexpFlag: string = Util.maybeStr(process.env.FEEDGEN_USE_REGEXP) ?? 'false'
+						const insertText: string = (useRegexpFlag === 'true') ? textLower : ''
 
 						// postテーブルに挿入
 						const result = await trx.insertInto('post')
@@ -263,7 +264,7 @@ async function main() {
 	try {
 		Trace.info('searchtodb.ts start')
 
-		const dbLocation = maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
+		const dbLocation = Util.maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
 		if (!dbLocation) {
 			Trace.error('Database location is not defined.')
 			process.exit(1)
@@ -274,7 +275,7 @@ async function main() {
 		await migrateToLatest(db)
 		Trace.debug('searchtodb.ts createDb end')
 
-		const dbLoop: number = maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
+		const dbLoop: number = Util.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
 		const algos: Algos = Algos.getInstance()
 		const searchTagArray: string[] = algos.getSearchTagArray()
 		const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
@@ -297,13 +298,4 @@ async function main() {
 	}
 }
 
-const maybeStr = (val?: string) => val
-
-const maybeInt = (val?: string) => {
-	if (!val) return undefined
-	const int = parseInt(val, 10)
-	if (isNaN(int)) return undefined
-	return int
-  }
-  
 main()

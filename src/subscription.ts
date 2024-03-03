@@ -122,8 +122,9 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 							.execute()
 						// レコードが存在しない場合のみ挿入を実行
 						if (exists.length === 0) {
-							// デバッグモードの時のみtextに挿入を行う
-							const insertText: string = (process.env.FEEDGEN_DEBUG_MODE === 'true') ? postToCreate.text : ''
+							// 正規表現使用時のみtextに挿入を行う
+							const useRegexpFlag: string = Util.maybeStr(process.env.FEEDGEN_USE_REGEXP) ?? 'false'
+							const insertText: string = (useRegexpFlag === 'true') ? postToCreate.text : ''
 
 							// postテーブルに挿入
 							const result = await trx.insertInto('post')

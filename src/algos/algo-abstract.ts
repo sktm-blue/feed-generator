@@ -98,8 +98,9 @@ export abstract class AlgoAbstract {
 					'id',
 					'in',
 					selectFrom('tag')
-					  .select('id')
-					  .where(ebOr)
+						.distinct()
+						.select('id')
+						.where(ebOr)
 				))
 		}
 
