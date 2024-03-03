@@ -16,7 +16,7 @@ import { raftall, raftja } from './raft'
 import { citiesall, citiesja } from './cities'
 import { omegacraall, omegacraja } from './omegacra'
 import { satisfactoryall, satisfactoryja } from './satisfactory'
-import { palall, palja, palimageja } from './pal'
+import { palall, palja, palimageall, palimageja } from './pal'
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 
@@ -40,6 +40,7 @@ export class Algos {
 		satisfactoryja,
 		palall,
 		palja,
+		palimageall,
 		palimageja,
 	]
 

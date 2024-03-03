@@ -9,6 +9,7 @@
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "start": "ts-node src/index.ts",
+    "searchtodb": "ts-node src/searchtodb.ts",
     "build": "tsc"
   },
   "dependencies": {

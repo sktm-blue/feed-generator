@@ -41,6 +41,19 @@ class AlgoImplJa extends AlgoImplAll {
 	}
 }
 
+class AlgoImplImageAll extends AlgoImplAll {
+	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
+	// max 15 chars
+	public getShortname(): string {
+		return 'palimageall'
+	}
+
+	// 画像付き投稿表示設定
+	protected getImageSwitch(): number {
+		return Constants.IMAGE_SWITCH.EXISTS_IMAGE_ONLY
+	}
+}
+
 class AlgoImplImageJa extends AlgoImplJa {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 	// max 15 chars
@@ -56,4 +69,5 @@ class AlgoImplImageJa extends AlgoImplJa {
 
 export const palall: AlgoAbstract = new AlgoImplAll()
 export const palja: AlgoAbstract = new AlgoImplJa()
+export const palimageall: AlgoAbstract = new AlgoImplImageAll()
 export const palimageja: AlgoAbstract = new AlgoImplImageJa()
