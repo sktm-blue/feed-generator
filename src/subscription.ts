@@ -3,10 +3,11 @@ import {
 	isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
-import { INSERT_WORDS, INSERT_ACTORS } from './const'
-import { traceDebug, traceInfo, traceError } from './trace'
-
+import { Algos } from './algos'
 import * as AppBskyEmbedImages from './lexicon/types/app/bsky/embed/images'
+import { Util } from './util'
+import { Constants } from './constants'
+import { Trace } from './trace'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
 	async handleEvent(evt: RepoEvent) {
@@ -33,17 +34,28 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 					if (AppBskyEmbedImages.isMain(create.record.embed)) {
 						const images: AppBskyEmbedImages.Image[] = create.record.embed.images
 						for (const image of images) {
+							textLower += ' '
 							textLower += image.alt.toLowerCase()
 							recordImageCount += 1
 						}
 					}
 
+					// 本文+ALTテキストを見て収集するかどうか判定する
 					let includeFlag: boolean = false
-					for (const insertWord of INSERT_WORDS) {
-						includeFlag = includeFlag || textLower.includes(insertWord.query.toLowerCase())
+					const algos: Algos = Algos.getInstance()
+					// ハッシュタグが適切に含まれているかを調べる
+					const tagArray: string[] = Util.findHashtags(textLower)
+					Trace.debug('tagArray = ' + tagArray)
+					const searchTagArray: string[] = algos.getSearchTagArray()
+					for (const tag of tagArray) {
+						for (const searchTag of searchTagArray) {
+							includeFlag = includeFlag || (tag === searchTag)			// 完全一致のみOK
+						}
 					}
-					for (const insertActor of INSERT_ACTORS) {
-						includeFlag = includeFlag || create.uri.includes(insertActor.query)
+					// 検索ワードが適切に含まれているかを調べる
+					const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+					for (const searchWord of searchWordArray) {
+						includeFlag = includeFlag || textLower.includes(searchWord)		// 含まれていればOK
 					}
 					return includeFlag
 				})
@@ -51,45 +63,44 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 					// 以下2つの処理は上記filterと同じことをやっていて効率が悪い
 					// text取得
 					let textLower: string = create.record.text.toLowerCase()
-					traceDebug(textLower)
+					Trace.debug(textLower)
 
 					// 画像の添付があればALTテキスト追加
 					let recordImageCount: number = 0
 					if (AppBskyEmbedImages.isMain(create.record.embed)) {
 						const images: AppBskyEmbedImages.Image[] = create.record.embed.images
 						for (const image of images) {
-							traceDebug('ALT : ' + image.alt)
+							Trace.debug('ALT : ' + image.alt)
+							textLower += ' '
 							textLower += image.alt.toLowerCase()
 							recordImageCount += 1
 						}
 					}
-					traceDebug('imageCount = ' + recordImageCount)
+					Trace.debug('imageCount = ' + recordImageCount)
+
+					// ハッシュタグ
+					const tagArray: string[] = Util.findHashtags(textLower)
+					Trace.debug('tagArray = ' + tagArray)
 
 					// 言語情報
-					//traceDebug('langs start create.record.langs.length = ' + create.record.langs?.length)
-					let langs: string[] = ["", "", ""]
-					if (create.record.langs !== undefined) {
-						for (let i: number = 0; i < langs.length; i++) {
-							if (i < create.record.langs.length) {
-								langs[i] = create.record.langs[i]
-								traceDebug(langs[i])   // jaやenが出力される
-							}
-						}
-					}
-					//traceDebug('langs end')
+					const langs: number[] = Util.getLangs(create.record.langs)
+
+					// 投稿タイプ
+					const parentUri: string | null = create.record?.reply?.parent.uri ?? null
+					let postType: number = Util.getPostType(create.uri, parentUri)
 
 					// map alf-related posts to a db row
 					return {
 						uri: create.uri,
 						cid: create.cid,
-						text: textLower, // textフィールドを追加
-						lang1: langs[0], // lang1フィールドを追加
-						lang2: langs[1], // lang2フィールドを追加
-						lang3: langs[2], // lang3フィールドを追加
-						replyParent: create.record?.reply?.parent.uri ?? null,
-						replyRoot: create.record?.reply?.root.uri ?? null,
+						text: textLower,
+						tagArray: tagArray,
+						lang1: langs[0],
+						lang2: langs[1],
+						lang3: langs[2],
+						postType: postType,
 						indexedAt: new Date().toISOString(),
-						imageCount: recordImageCount, // imageCountフィールドを追加
+						imageCount: recordImageCount,
 					}
 				})
 
@@ -99,13 +110,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 					.where('uri', 'in', postsToDelete)
 					.execute()
 			}
-			//if (postsToCreate.length > 0) {
-			//  await this.db
-			//    .insertInto('post')
-			//    .values(postsToCreate)
-			//    .onConflict((oc) => oc.doNothing())
-			//    .execute()
-			//}
+
 			if (postsToCreate.length > 0) {
 				await this.db.transaction().execute(async (trx) => {
 					for (const postToCreate of postsToCreate) {
@@ -114,19 +119,49 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 							.selectFrom('post')
 							.select('uri')
 							.where('uri', '=', postToCreate.uri)
-							.execute();
+							.execute()
 						// レコードが存在しない場合のみ挿入を実行
 						if (exists.length === 0) {
-							await trx.insertInto('post')
-								.values(postToCreate)
+							// デバッグモードの時のみtextに挿入を行う
+							const insertText: string = (process.env.FEEDGEN_DEBUG_MODE === 'true') ? postToCreate.text : ''
+
+							// postテーブルに挿入
+							const result = await trx.insertInto('post')
+								.values({
+									uri: postToCreate.uri,
+									cid: postToCreate.cid,
+									text: insertText,
+									lang1: postToCreate.lang1,
+									lang2: postToCreate.lang2,
+									lang3: postToCreate.lang3,
+									postType: postToCreate.postType,
+									indexedAt: postToCreate.indexedAt,
+									imageCount: postToCreate.imageCount,
+								})
 								.onConflict((oc) => oc.doNothing())
-								.execute()
+								.executeTakeFirst()
+
+							// tagテーブルに挿入
+							if (result.insertId !== undefined) {
+								const id: number = Number(result.insertId)
+								Trace.debug('insertId = ' + id)
+
+								for (const tag of postToCreate.tagArray) {
+									await trx.insertInto('tag')
+										.values({
+											id: id,
+											tagStr: tag,
+										})
+										.executeTakeFirst()
+								}
+							}
+
 						}
 					}
 				})
 			}
 		} catch (error) {
-			traceError('handleEvent error', error)
+			Trace.error('handleEvent error', error)
 		}
 	}
 }

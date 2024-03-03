@@ -4,10 +4,13 @@
 
 import https from 'https';
 import dotenv from 'dotenv';
-import { createDb, Database } from './db';
+import { createDb, Database, migrateToLatest } from './db';
 import * as AppBskyEmbedImages from './lexicon/types/app/bsky/embed/images'
-import { INSERT_WORDS, INSERT_ACTORS } from './const'
-import { traceDebug, traceInfo, traceError } from './trace'
+import { AtUri } from '@atproto/syntax'
+import { Algos } from './algos'
+import { Util } from './util'
+import { Constants } from './constants'
+import { Trace } from './trace'
 dotenv.config();
 
 type ResultData = {
@@ -155,6 +158,7 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 			// 画像の添付があればALTテキスト追加
 			let recordImageCount: number = 0
 			for (const image of data.images) {
+				textLower += ' '
 				textLower += image.alt.toLowerCase()
 				recordImageCount += 1
 			}
@@ -164,13 +168,27 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 			// 例えば「買った」で検索しても「買うのを諦めちゃった」がヒットするため、完全に一致しないものは弾く
 			// 今後Bluesky側が改善されれば必要なくなる処理
 			let includeFlag: boolean = false
-			for (const insertWord of INSERT_WORDS) {
-				includeFlag = includeFlag || textLower.includes(insertWord.query)
+			const algos: Algos = Algos.getInstance()
+			// ハッシュタグが適切に含まれているかを調べる
+			const tagArray: string[] = Util.findHashtags(textLower)
+			Trace.debug('tagArray = ' + tagArray)
+			const searchTagArray: string[] = algos.getSearchTagArray()
+			for (const tag of tagArray) {
+				for (const searchTag of searchTagArray) {
+					includeFlag = includeFlag || (tag === searchTag)			// 完全一致のみOK
+				}
+			}
+			// 検索ワードが適切に含まれているかを調べる
+			const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+			for (const searchWord of searchWordArray) {
+				includeFlag = includeFlag || textLower.includes(searchWord)		// 含まれていればOK
 			}
 
+			let insertedId: number = 0
 			if (includeFlag) {
 				//traceDebug(textLower);
 				//traceDebug('imageCount = ' + recordImageCount)
+
 				await db.transaction().execute(async (trx) => {
 					// 同じuriを持つレコードがデータベースに存在するか確認
 					const exists = await trx
@@ -181,79 +199,111 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 					// レコードが存在しない場合のみ挿入を実行
 					if (exists.length === 0) {
 						// 言語情報
-						let langs: string[] = ["", "", ""]
-						//traceDebug('langs start create.record.langs.length = ' + data.langs?.length)
-						//traceDebug('langs start create.record.langs = ' + data.langs)
-						if (data.langs !== undefined) {
-							for (let i: number = 0; i < langs.length; i++) {
-								if (i < data.langs.length) {
-									langs[i] = data.langs[i]
-									//traceDebug(langs[i])   // jaやenが出力される
-								}
-							}
-						}
-						//traceDebug('langs end')
+						const langs: number[] = Util.getLangs(data.langs)
 
-						await trx.insertInto('post')
+						// 投稿タイプ		
+						let postType: number = Util.getPostType(data.uri, data.replyParent)
+
+						// デバッグモードの時のみtextに挿入を行う
+						const insertText: string = (process.env.FEEDGEN_DEBUG_MODE === 'true') ? textLower : ''
+
+						// postテーブルに挿入
+						const result = await trx.insertInto('post')
 							.values({
 								uri: data.uri,
 								cid: data.cid,
-								text: textLower, // textフィールドを追加
-								lang1: langs[0], // lang1フィールドを追加
-								lang2: langs[1], // lang2フィールドを追加
-								lang3: langs[2], // lang3フィールドを追加
-								replyParent: data.replyParent,
-								replyRoot: data.replyRoot,
+								text: insertText,
+								lang1: langs[0],
+								lang2: langs[1],
+								lang3: langs[2],
+								postType: postType,
 								indexedAt: data.indexedAt,
-								imageCount: recordImageCount, // imageCountフィールドを追加
+								imageCount: recordImageCount,
 							})
-							.execute()
+							.executeTakeFirst()
+
+						// tagテーブルに挿入
+						if (result.insertId !== undefined) {
+							const insertId: number = Number(result.insertId)
+
+							for (const tag of tagArray) {
+								await trx.insertInto('tag')
+									.values({
+										id: insertId,
+										tagStr: tag,
+									})
+									.executeTakeFirst()
+							}
+
+							insertedId = insertId;
+						}
+
 						// 取り込めたtextを表示(消してもOK)
 						//traceDebug(`Added post to database: ${post.record.text}`);
+
 						insertedCount++
 					}
 				})
 			}
+
+			if (insertedId == 0) {
+				Trace.debug('** Record is not inserted.')
+			} else {
+				Trace.debug('@@ Record is inserted. insertedId = ' + insertedId)
+			}
+
 		}
-		traceInfo('insertedCount = ' + insertedCount)
+		Trace.info('insertedCount = ' + insertedCount)
 	} catch (error) {
-		traceError('saveSearchResultsToDb error', error)
+		Trace.error('saveSearchResultsToDb error', error)
 	}
 }
 
 async function main() {
 	try {
-		traceInfo('searchtodb.ts start')
+		Trace.info('searchtodb.ts start')
 
 		const dbLocation = maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
 		if (!dbLocation) {
-			traceError('Database location is not defined.')
+			Trace.error('Database location is not defined.')
 			process.exit(1)
 		}
 
-		traceDebug('searchtodb.ts createDb start')
+		Trace.debug('searchtodb.ts createDb start')
 		const db = createDb(dbLocation)
-		traceDebug('searchtodb.ts createDb end')
+		await migrateToLatest(db)
+		Trace.debug('searchtodb.ts createDb end')
 
-		for (const insertWord of INSERT_WORDS) {
-			const searchResults: ResultData[] = await fetchSearchResults(insertWord.query, insertWord.maxLoop)
-			traceInfo('Search ' + insertWord.query + ' end. maxLoop = ' + insertWord.maxLoop + ' hits = ' + searchResults.length)
+		const dbLoop: number = maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
+		const algos: Algos = Algos.getInstance()
+		const searchTagArray: string[] = algos.getSearchTagArray()
+		const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
+		for (const searchTag of searchTagArrayWithSharp) {
+			const searchResults: ResultData[] = await fetchSearchResults(searchTag, dbLoop)
+			Trace.info('Search ' + searchTag + ' end. hits = ' + searchResults.length)
 			await saveSearchResultsToDb(db, searchResults)
 		}
-		for (const insertActor of INSERT_ACTORS) {
-			const searchResults: ResultData[] = await fetchActorSearchResults(insertActor.query, insertActor.maxLoop)
-			traceInfo('Search ' + insertActor.query + ' end. maxLoop = ' + insertActor.maxLoop + ' hits = ' + searchResults.length)
+		const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+		for (const searchWord of searchWordArray) {
+			const searchResults: ResultData[] = await fetchSearchResults(searchWord, dbLoop)
+			Trace.info('Search ' + searchWord + ' end. hits = ' + searchResults.length)
 			await saveSearchResultsToDb(db, searchResults)
 		}
 
-		traceError('*** errtest')
-		traceInfo('searchtodb.ts end')
+		Trace.info('searchtodb.ts end')
 	} catch (error) {
-		traceError('searchtodb.ts error', error)
+		Trace.error('searchtodb.ts error', error)
 		process.exit(1) // エラーが発生した場合終了
 	}
 }
 
 const maybeStr = (val?: string) => val
 
+const maybeInt = (val?: string) => {
+	if (!val) return undefined
+	const int = parseInt(val, 10)
+	if (isNaN(int)) return undefined
+	return int
+  }
+  
 main()

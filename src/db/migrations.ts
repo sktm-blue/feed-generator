@@ -12,16 +12,21 @@ migrations['001'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
       .createTable('post')
-      .addColumn('uri', 'varchar', (col) => col.primaryKey())
+      .addColumn('id', 'integer', (col) => col.primaryKey())
+      .addColumn('uri', 'varchar', (col) => col.notNull())
       .addColumn('cid', 'varchar', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())    // text
-      .addColumn('lang1', 'text', (col) => col.notNull())    // lang1
-      .addColumn('lang2', 'text', (col) => col.notNull())    // lang2
-      .addColumn('lang3', 'text', (col) => col.notNull())    // lang3
-      .addColumn('replyParent', 'varchar')
-      .addColumn('replyRoot', 'varchar')
+      .addColumn('lang1', 'integer')    // lang1
+      .addColumn('lang2', 'integer')    // lang2
+      .addColumn('lang3', 'integer')    // lang3
+      .addColumn('postType', 'integer')
       .addColumn('indexedAt', 'varchar', (col) => col.notNull())
       .addColumn('imageCount', 'integer')    // imageCount
+      .execute()
+    await db.schema
+      .createTable('tag')
+      .addColumn('id', 'integer')
+      .addColumn('tagStr', 'varchar', (col) => col.notNull())
       .execute()
     await db.schema
       .createTable('sub_state')
@@ -37,6 +42,7 @@ migrations['001'] = {
   },
   async down(db: Kysely<unknown>) {
     await db.schema.dropTable('post').execute()
+    await db.schema.dropTable('tag').execute()
     await db.schema.dropTable('sub_state').execute()
   },
 }

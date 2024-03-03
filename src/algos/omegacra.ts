@@ -1,18 +1,18 @@
 import { AlgoAbstract } from './algo-abstract'
 import { Constants } from '../constants'
 
-class AlgoImpl extends AlgoAbstract {
+class AlgoImplAll extends AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 	// max 15 chars
 	public getShortname(): string {
-		return 'cat'
+		return 'omegacraall'
 	}
 	
 	// ハッシュタグで検索する場合のタグ(「#」は不要)
 	public getTagArray(): string[] {
 		return [
-			 '猫', 
-			 '犬',
+			 'omegacrafter', 
+			 'オメガクラフター',
 		]
 	}
 
@@ -27,4 +27,18 @@ class AlgoImpl extends AlgoAbstract {
 	}
 }
 
-export const cat: AlgoAbstract = new AlgoImpl()
+class AlgoImplJa extends AlgoImplAll {
+	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
+	// max 15 chars
+	public getShortname(): string {
+		return 'omegacraja'
+	}
+	
+	// 表示言語設定
+	protected getLangSwitch(): number {
+		return Constants.LANG_SWITCH.ONLY_JA
+	}
+}
+	
+export const omegacraall: AlgoAbstract = new AlgoImplAll()
+export const omegacraja: AlgoAbstract = new AlgoImplJa()
