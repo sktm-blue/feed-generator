@@ -12,6 +12,7 @@ class AlgoImplAll extends AlgoAbstract {
 	public getTagArray(): string[] {
 		return [
 			 'palworld', 
+			 'パルワ',
 			 'パルワールド',
 		]
 	}

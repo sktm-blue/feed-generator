@@ -11,8 +11,13 @@ class AlgoImplAll extends AlgoAbstract {
 	// ハッシュタグで検索する場合のタグ(「#」は不要)
 	public getTagArray(): string[] {
 		return [
-			 'citiesskylines', 
-			 'シティーズスカイライン',
+			'citiesskylines', 
+			'citiesskylines2', 
+			'CitiesSkylinesII',
+			'シティーズスカイライン',
+			'シティーズスカイライン2',
+			'シティーズスカイライン２',
+			'シティーズスカイラインII',
 		]
 	}
 
