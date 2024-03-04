@@ -41,42 +41,38 @@ async function fetchSearchResults(query: string,
 				data += chunk;
 			})
 			res.on('end', async () => {
-				try {
-					//traceDebug('JSON.parse start')
-					const result = JSON.parse(data)
-					//traceDebug('JSON.parse end')
+				//traceDebug('JSON.parse start')
+				const result = JSON.parse(data)
+				//traceDebug('JSON.parse end')
 
-					let resultDataArray: ResultData[] = [];
-					for (const post of result.posts) {
-						let embedImages: AppBskyEmbedImages.Image[] = []
-						if (AppBskyEmbedImages.isMain(post.record.embed)) {
-							embedImages = post.record.embed.images
-						}
-
-						const resultData: ResultData = {
-							uri: post.uri,
-							cid: post.cid,
-							text: post.record.text,
-							langs: post.record.langs,
-							images: embedImages,
-							replyParent: post.record?.reply?.parent.uri ?? null,
-							replyRoot: post.record?.reply?.root.uri ?? null,
-							indexedAt: post.indexedAt,
-						}
-						resultDataArray.push(resultData)
+				let resultDataArray: ResultData[] = [];
+				for (const post of result.posts) {
+					let embedImages: AppBskyEmbedImages.Image[] = []
+					if (AppBskyEmbedImages.isMain(post.record.embed)) {
+						embedImages = post.record.embed.images
 					}
 
-					const currentLoop: number = alreadyLoop + 1;
-					if (currentLoop < maxLoop && result.cursor && resultDataArray.length > 0) {
-						// 再帰呼び出し
-						const nextResults = await fetchSearchResults(query, maxLoop, currentLoop, limit, result.cursor)
-						resolve([...resultDataArray, ...nextResults])
-					} else {
-						// 再帰せずに抜ける
-						resolve(resultDataArray)
+					const resultData: ResultData = {
+						uri: post.uri,
+						cid: post.cid,
+						text: post.record.text,
+						langs: post.record.langs,
+						images: embedImages,
+						replyParent: post.record?.reply?.parent.uri ?? null,
+						replyRoot: post.record?.reply?.root.uri ?? null,
+						indexedAt: post.indexedAt,
 					}
-				} catch (error) {
-					reject(error)
+					resultDataArray.push(resultData)
+				}
+
+				const currentLoop: number = alreadyLoop + 1;
+				if (currentLoop < maxLoop && result.cursor && resultDataArray.length > 0) {
+					// 再帰呼び出し
+					const nextResults = await fetchSearchResults(query, maxLoop, currentLoop, limit, result.cursor)
+					resolve([...resultDataArray, ...nextResults])
+				} else {
+					// 再帰せずに抜ける
+					resolve(resultDataArray)
 				}
 			})
 		}).on('error', (error) => {
@@ -102,43 +98,39 @@ async function fetchActorSearchResults(actor: string,
 				data += chunk
 			})
 			res.on('end', async () => {
-				try {
-					//traceDebug('JSON.parse start')
-					const result = JSON.parse(data)
-					//traceDebug('JSON.parse end')
+				//traceDebug('JSON.parse start')
+				const result = JSON.parse(data)
+				//traceDebug('JSON.parse end')
 
-					let resultDataArray: ResultData[] = []
-					for (const feedElement of result.feed) {
-						const post: any = feedElement.post
-						let embedImages: AppBskyEmbedImages.Image[] = []
-						if (AppBskyEmbedImages.isMain(post.record.embed)) {
-							embedImages = post.record.embed.images
-						}
-
-						const resultData: ResultData = {
-							uri: post.uri,
-							cid: post.cid,
-							text: post.record.text,
-							langs: post.record.langs,
-							images: embedImages,
-							replyParent: post.record?.reply?.parent.uri ?? null,
-							replyRoot: post.record?.reply?.root.uri ?? null,
-							indexedAt: post.indexedAt,
-						}
-						resultDataArray.push(resultData)
+				let resultDataArray: ResultData[] = []
+				for (const feedElement of result.feed) {
+					const post: any = feedElement.post
+					let embedImages: AppBskyEmbedImages.Image[] = []
+					if (AppBskyEmbedImages.isMain(post.record.embed)) {
+						embedImages = post.record.embed.images
 					}
 
-					const currentLoop: number = alreadyLoop + 1;
-					if (currentLoop < maxLoop && result.cursor && resultDataArray.length > 0) {
-						// 再帰呼び出し
-						const nextResults = await fetchActorSearchResults(actor, maxLoop, currentLoop, limit, result.cursor)
-						resolve([...resultDataArray, ...nextResults])
-					} else {
-						// 再帰せずに抜ける
-						resolve(resultDataArray)
+					const resultData: ResultData = {
+						uri: post.uri,
+						cid: post.cid,
+						text: post.record.text,
+						langs: post.record.langs,
+						images: embedImages,
+						replyParent: post.record?.reply?.parent.uri ?? null,
+						replyRoot: post.record?.reply?.root.uri ?? null,
+						indexedAt: post.indexedAt,
 					}
-				} catch (error) {
-					reject(error)
+					resultDataArray.push(resultData)
+				}
+
+				const currentLoop: number = alreadyLoop + 1;
+				if (currentLoop < maxLoop && result.cursor && resultDataArray.length > 0) {
+					// 再帰呼び出し
+					const nextResults = await fetchActorSearchResults(actor, maxLoop, currentLoop, limit, result.cursor)
+					resolve([...resultDataArray, ...nextResults])
+				} else {
+					// 再帰せずに抜ける
+					resolve(resultDataArray)
 				}
 			})
 		}).on('error', (error) => {
@@ -149,153 +141,134 @@ async function fetchActorSearchResults(actor: string,
 
 // 取得したデータをDBに登録
 async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Promise<void> {
-	try {
-		let insertedCount: number = 0
-		for (const data of dataArray) {
-			// text取得
-			let textLower: string = data.text.toLowerCase()
+	let insertedCount: number = 0
+	for (const data of dataArray) {
+		// text取得
+		let textLower: string = data.text.toLowerCase()
 
-			// 画像の添付があればALTテキスト追加
-			let recordImageCount: number = 0
-			for (const image of data.images) {
-				textLower += ' '
-				textLower += image.alt.toLowerCase()
-				recordImageCount += 1
+		// 画像の添付があればALTテキスト追加
+		let recordImageCount: number = 0
+		for (const image of data.images) {
+			textLower += ' '
+			textLower += image.alt.toLowerCase()
+			recordImageCount += 1
+		}
+
+		// 検索語句が指定通り含まれているか確認
+		// Blueskyの検索機能が日本語を適切に検索しないための措置
+		// 例えば「買った」で検索しても「買うのを諦めちゃった」がヒットするため、完全に一致しないものは弾く
+		// 今後Bluesky側が改善されれば必要なくなる処理
+		let includeFlag: boolean = false
+		const algos: Algos = Algos.getInstance()
+		// ハッシュタグが適切に含まれているかを調べる
+		const tagArray: string[] = Util.findHashtags(textLower)
+		Trace.debug('tagArray = ' + tagArray)
+		const searchTagArray: string[] = algos.getSearchTagArray()
+		for (const tag of tagArray) {
+			for (const searchTag of searchTagArray) {
+				includeFlag = includeFlag || (tag === searchTag)			// 完全一致のみOK
 			}
+		}
+		// 検索ワードが適切に含まれているかを調べる
+		const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+		for (const searchWord of searchWordArray) {
+			includeFlag = includeFlag || textLower.includes(searchWord)		// 含まれていればOK
+		}
 
-			// 検索語句が指定通り含まれているか確認
-			// Blueskyの検索機能が日本語を適切に検索しないための措置
-			// 例えば「買った」で検索しても「買うのを諦めちゃった」がヒットするため、完全に一致しないものは弾く
-			// 今後Bluesky側が改善されれば必要なくなる処理
-			let includeFlag: boolean = false
-			const algos: Algos = Algos.getInstance()
-			// ハッシュタグが適切に含まれているかを調べる
-			const tagArray: string[] = Util.findHashtags(textLower)
-			Trace.debug('tagArray = ' + tagArray)
-			const searchTagArray: string[] = algos.getSearchTagArray()
-			for (const tag of tagArray) {
-				for (const searchTag of searchTagArray) {
-					includeFlag = includeFlag || (tag === searchTag)			// 完全一致のみOK
-				}
-			}
-			// 検索ワードが適切に含まれているかを調べる
-			const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
-			for (const searchWord of searchWordArray) {
-				includeFlag = includeFlag || textLower.includes(searchWord)		// 含まれていればOK
-			}
+		let insertedId: number = 0
+		if (includeFlag) {
+			//traceDebug(textLower);
+			//traceDebug('imageCount = ' + recordImageCount)
 
-			let insertedId: number = 0
-			if (includeFlag) {
-				//traceDebug(textLower);
-				//traceDebug('imageCount = ' + recordImageCount)
+			db.transaction().execute(async (trx) => {
+				// 同じuriを持つレコードがデータベースに存在するか確認
+				const exists = await trx
+					.selectFrom('post')
+					.select('uri')
+					.where('uri', '=', data.uri)
+					.execute()
+				// レコードが存在しない場合のみ挿入を実行
+				if (exists.length === 0) {
+					// 言語情報
+					const langs: number[] = Util.getLangs(data.langs)
 
-				await db.transaction().execute(async (trx) => {
-					// 同じuriを持つレコードがデータベースに存在するか確認
-					const exists = await trx
-						.selectFrom('post')
-						.select('uri')
-						.where('uri', '=', data.uri)
-						.execute()
-					// レコードが存在しない場合のみ挿入を実行
-					if (exists.length === 0) {
-						// 言語情報
-						const langs: number[] = Util.getLangs(data.langs)
+					// 投稿タイプ		
+					let postType: number = Util.getPostType(data.uri, data.replyParent)
 
-						// 投稿タイプ		
-						let postType: number = Util.getPostType(data.uri, data.replyParent)
+					// 正規表現使用時のみtextに挿入を行う
+					const useRegexpFlag: string = Util.maybeStr(process.env.FEEDGEN_USE_REGEXP) ?? 'false'
+					const insertText: string = (useRegexpFlag === 'true') ? textLower : ''
 
-						// 正規表現使用時のみtextに挿入を行う
-						const useRegexpFlag: string = Util.maybeStr(process.env.FEEDGEN_USE_REGEXP) ?? 'false'
-						const insertText: string = (useRegexpFlag === 'true') ? textLower : ''
+					// postテーブルに挿入
+					const result = await trx.insertInto('post')
+						.values({
+							uri: data.uri,
+							cid: data.cid,
+							text: insertText,
+							lang1: langs[0],
+							lang2: langs[1],
+							lang3: langs[2],
+							postType: postType,
+							indexedAt: data.indexedAt,
+							imageCount: recordImageCount,
+						})
+						.executeTakeFirst()
 
-						// postテーブルに挿入
-						const result = await trx.insertInto('post')
-							.values({
-								uri: data.uri,
-								cid: data.cid,
-								text: insertText,
-								lang1: langs[0],
-								lang2: langs[1],
-								lang3: langs[2],
-								postType: postType,
-								indexedAt: data.indexedAt,
-								imageCount: recordImageCount,
-							})
-							.executeTakeFirst()
+					// tagテーブルに挿入
+					if (result.insertId !== undefined) {
+						const insertId: number = Number(result.insertId)
 
-						// tagテーブルに挿入
-						if (result.insertId !== undefined) {
-							const insertId: number = Number(result.insertId)
-
-							for (const tag of tagArray) {
-								await trx.insertInto('tag')
-									.values({
-										id: insertId,
-										tagStr: tag,
-									})
-									.executeTakeFirst()
-							}
-
-							insertedId = insertId;
+						for (const tag of tagArray) {
+							await trx.insertInto('tag')
+								.values({
+									id: insertId,
+									tagStr: tag,
+								})
+								.executeTakeFirst()
 						}
 
-						// 取り込めたtextを表示(消してもOK)
-						//traceDebug(`Added post to database: ${post.record.text}`);
-
-						insertedCount++
+						Trace.debug('@@ Record is inserted. insertId = ' + insertId)
 					}
-				})
-			}
 
-			if (insertedId == 0) {
-				Trace.debug('** Record is not inserted.')
-			} else {
-				Trace.debug('@@ Record is inserted. insertedId = ' + insertedId)
-			}
-
+					// 取り込めたtextを表示(消してもOK)
+					//traceDebug(`Added post to database: ${post.record.text}`);
+				}
+			})
 		}
-		Trace.info('insertedCount = ' + insertedCount)
-	} catch (error) {
-		Trace.error('saveSearchResultsToDb error', error)
 	}
 }
 
 async function main() {
-	try {
-		Trace.info('searchtodb.ts start')
+	Trace.info('searchtodb.ts start')
 
-		const dbLocation = Util.maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
-		if (!dbLocation) {
-			Trace.error('Database location is not defined.')
-			process.exit(1)
-		}
-
-		Trace.debug('searchtodb.ts createDb start')
-		const db = createDb(dbLocation)
-		await migrateToLatest(db)
-		Trace.debug('searchtodb.ts createDb end')
-
-		const dbLoop: number = Util.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
-		const algos: Algos = Algos.getInstance()
-		const searchTagArray: string[] = algos.getSearchTagArray()
-		const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
-		for (const searchTag of searchTagArrayWithSharp) {
-			const searchResults: ResultData[] = await fetchSearchResults(searchTag, dbLoop)
-			Trace.info('Search ' + searchTag + ' end. hits = ' + searchResults.length)
-			await saveSearchResultsToDb(db, searchResults)
-		}
-		const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
-		for (const searchWord of searchWordArray) {
-			const searchResults: ResultData[] = await fetchSearchResults(searchWord, dbLoop)
-			Trace.info('Search ' + searchWord + ' end. hits = ' + searchResults.length)
-			await saveSearchResultsToDb(db, searchResults)
-		}
-
-		Trace.info('searchtodb.ts end')
-	} catch (error) {
-		Trace.error('searchtodb.ts error', error)
-		process.exit(1) // エラーが発生した場合終了
+	const dbLocation = Util.maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
+	if (!dbLocation) {
+		Trace.error('Database location is not defined.')
+		process.exit(1)
 	}
+
+	Trace.debug('searchtodb.ts createDb start')
+	const db = createDb(dbLocation)
+	await migrateToLatest(db)
+	Trace.debug('searchtodb.ts createDb end')
+
+	const dbLoop: number = Util.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
+	const algos: Algos = Algos.getInstance()
+	const searchTagArray: string[] = algos.getSearchTagArray()
+	const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
+	for (const searchTag of searchTagArrayWithSharp) {
+		const searchResults: ResultData[] = await fetchSearchResults(searchTag, dbLoop)
+		Trace.info('Search ' + searchTag + ' end. hits = ' + searchResults.length)
+		await saveSearchResultsToDb(db, searchResults)
+	}
+	const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+	for (const searchWord of searchWordArray) {
+		const searchResults: ResultData[] = await fetchSearchResults(searchWord, dbLoop)
+		Trace.info('Search ' + searchWord + ' end. hits = ' + searchResults.length)
+		await saveSearchResultsToDb(db, searchResults)
+	}
+
+	Trace.info('searchtodb.ts end')
 }
 
 main()

@@ -28,14 +28,14 @@ export class Trace {
         }
         const logStr: string = `[${this.getYmdHms(now)} INFO ] ${msg}`
         console.log(logStr)
-        fs.appendFileSync(`${this.getYmd(now)}.log`, logStr + '\n')
+        fs.appendFile(`${this.getYmd(now)}.log`, logStr + '\n', err => { if ( err ) throw err })
     }
 
     public static error(msg: string, error: any = null): void {
         const now = new Date();
         const logStr: string = `[${this.getYmdHms(now)} ERROR] ${msg}`
         console.error(logStr, error)
-        fs.appendFileSync(`${this.getYmd(now)}.log`, logStr + '\n')
+        fs.appendFile(`${this.getYmd(now)}.log`, logStr + '\n', err => { if ( err ) throw err })
     }
 
     private static getYmdHms(now: Date): string {
