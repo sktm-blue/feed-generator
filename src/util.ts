@@ -1,12 +1,15 @@
 import { AtUri } from '@atproto/syntax'
 import { Constants } from './constants'
 import { Trace } from './trace'
+import { TAG_REGEX, TRAILING_PUNCTUATION_REGEX } from '@atproto/api'
 
 export class Util {
 	// 与えられた文字列からハッシュタグを抽出する
 	// この関数は以下サイトのコードを使用させて頂いてます
 	// https://note.com/zak5/n/n8c656edaf533
+	// https://github.com/bluesky-social/social-app/pull/3063/files#diff-8efacc15162b7e2c7319e7e7ec8a764a9ea0f73c0e9ace2b59e3e427bb13afcdL27
 	public static findHashtags(searchText: string): string[] {
+		/*
 		//const regexp: RegExp = /\B#\w\w+\b/g			// この方法では全角のタグがヒットしない
 		const regexp: RegExp = /#(\w|[^\x01-\x7E])+(\s|　|$)/g
 		const result: RegExpMatchArray | null = searchText.match(regexp)
@@ -18,6 +21,24 @@ export class Util {
 			}
 		}
 		return this.removeHashtagSharp(tagArray)
+		*/
+		let tagArray: string[] = []
+		const regex = TAG_REGEX
+		let match
+		while ((match = regex.exec(searchText))) {
+			const [_, __, tag] = match
+			//Trace.debug(tag)
+			if (!tag || tag.replace(TRAILING_PUNCTUATION_REGEX, '').length > 64) {
+				//Trace.debug('***searchText = ' + searchText)
+				continue
+			}
+
+			const [trailingPunc = ''] = tag.match(TRAILING_PUNCTUATION_REGEX) || []
+			const formedTag = (trailingPunc.length == 0) ? tag : tag.replace(trailingPunc, '')
+			//Trace.debug(tag)
+			tagArray.push(formedTag)
+		}
+		return tagArray
 	}
 
 	// 文字列配列に先頭の「#」を付加する
