@@ -22,8 +22,8 @@ export default function (server: Server, ctx: AppContext) {
       )
     }
 
-    /**
-     * Example of how to check auth if giving user-specific results:
+    // Example of how to check auth if giving user-specific results:
+    /*
     const requesterDid = await validateAuth(
       req,
       ctx.cfg.serviceDid,
@@ -32,7 +32,8 @@ export default function (server: Server, ctx: AppContext) {
     */
 
     const body = await algo(ctx, params)
-
+    //const body = await algo(ctx, params, requesterDid)
+    
     Trace.info('fg ' + feedUri.rkey)
 
     return {

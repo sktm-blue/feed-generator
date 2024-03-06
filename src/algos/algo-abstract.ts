@@ -49,6 +49,7 @@ export abstract class AlgoAbstract {
 
 	// URI一覧構築
 	public handler = async (ctx: AppContext, params: QueryParams) => {
+	//public handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
 
 		const tagArray: string[] = this.getTagArray()
 		const regexpPattern: string = this.getRegexpPattern()

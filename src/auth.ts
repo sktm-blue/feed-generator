@@ -15,4 +15,8 @@ export const validateAuth = async (
   return verifyJwt(jwt, serviceDid, async (did: string) => {
     return didResolver.resolveAtprotoKey(did)
   })
+  //const payload = await verifyJwt(jwt, serviceDid, async (did: string) => {
+  //  return didResolver.resolveAtprotoKey(did)
+  //})
+  //return payload.iss
 }

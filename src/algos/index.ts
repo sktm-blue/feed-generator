@@ -19,6 +19,7 @@ import { satisfactoryall, satisfactoryja } from './satisfactory'
 import { palall, palja, palimageall, palimageja } from './pal'
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
+//type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
 
 export class Algos {
 	// インスタンス

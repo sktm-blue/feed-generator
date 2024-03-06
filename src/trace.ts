@@ -16,7 +16,7 @@ export class Trace {
             if (args.length > 0) {
                 msg = args.join(", ")
             }
-            console.log(`[${this.getYmdHms(now)} DEBUG] ${msg}`)
+            console.log(`[${this.getYmdHms(now)} ${process.pid} DEBUG] ${msg}`)
         }
     }
 
@@ -26,14 +26,14 @@ export class Trace {
         if (args.length > 0) {
             msg = args.join(", ")
         }
-        const logStr: string = `[${this.getYmdHms(now)} INFO ] ${msg}`
+        const logStr: string = `[${this.getYmdHms(now)} ${process.pid} INFO ] ${msg}`
         console.log(logStr)
         fs.appendFile(`${this.getYmd(now)}.log`, logStr + '\n', err => { if ( err ) throw err })
     }
 
     public static error(msg: string, error: any = null): void {
         const now = new Date();
-        const logStr: string = `[${this.getYmdHms(now)} ERROR] ${msg}`
+        const logStr: string = `[${this.getYmdHms(now)} ${process.pid} ERROR] ${msg}`
         console.error(logStr, error)
         fs.appendFile(`${this.getYmd(now)}.log`, logStr + '\n', err => { if ( err ) throw err })
     }

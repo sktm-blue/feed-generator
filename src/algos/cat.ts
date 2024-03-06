@@ -13,6 +13,10 @@ class AlgoImpl extends AlgoAbstract {
 		return [
 			 '猫', 
 			 '犬',
+			 'ff14',
+			 '青空ごはん部',
+			 'art',
+			 'イラスト',
 		]
 	}
 
