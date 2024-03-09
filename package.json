@@ -8,12 +8,14 @@
   "license": "MIT",
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
-    "start": "ts-node src/index.ts",
-    "searchtodb": "ts-node src/searchtodb.ts",
+    "start": "node dist/index.js",
+    "startts": "ts-node src/index.ts",
+    "searchtodb": "node dist/searchtodb.js",
+    "searchtodbts": "ts-node src/searchtodb.ts",
     "build": "tsc"
   },
   "dependencies": {
-    "@atproto/api": "^0.10.4",
+    "@atproto/api": "^0.10.5",
     "@atproto/identity": "^0.2.1",
     "@atproto/lexicon": "^0.2.2",
     "@atproto/repo": "^0.3.2",
