@@ -12,6 +12,7 @@ import { AlgoAbstract } from './algo-abstract'
 import { cat } from './cat'
 import { newgearall, newgearja } from './newgear'
 import { skyfeedall, skyfeedja } from './skyfeed'
+import { sky } from './sky'
 import { raftall, raftja } from './raft'
 import { citiesall, citiesja } from './cities'
 import { omegacraall, omegacraja } from './omegacra'
@@ -31,6 +32,7 @@ export class Algos {
 		//newgearja,
 		//skyfeedall,
 		//skyfeedja,
+		sky,
 		raftall,
 		raftja,
 		citiesall,
