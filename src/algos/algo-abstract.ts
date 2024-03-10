@@ -138,14 +138,16 @@ export abstract class AlgoAbstract {
 
 		const res = await builder.execute()
 
-		/*
 		// ***デバッグ用
-		for (const resItem of res) {
-			traceDebug(resItem.text)
-			traceDebug('------------------------------')
-		}
+		//let ids: number[] = []
+		//for (const resItem of res) {
+		//	Trace.Debug(resItem.text)
+		//	Trace.Debug('------------------------------')
+		//	ids.push(resItem.id)
+		//}
+		//Trace.debug('ids = ' + ids.join(','))
+		//Trace.debug('------------------------------')
 		// ***
-		*/
 
 		const feed = res.map((row) => ({
 			post: row.uri,

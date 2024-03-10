@@ -180,7 +180,7 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 			//traceDebug(textLower);
 			//traceDebug('imageCount = ' + recordImageCount)
 
-			db.transaction().execute(async (trx) => {
+			await db.transaction().execute(async (trx) => {
 				// 同じuriを持つレコードがデータベースに存在するか確認
 				const exists = await trx
 					.selectFrom('post')
@@ -227,7 +227,7 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 								.executeTakeFirst()
 						}
 
-						Trace.debug('@@ Record is inserted. insertId = ' + insertId)
+						Trace.info('@@ Record is inserted. insertId = ' + insertId + ', tagArray = ' + tagArray)
 					}
 
 					// 取り込めたtextを表示(消してもOK)
@@ -239,36 +239,40 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 }
 
 async function main() {
-	Trace.info('searchtodb.ts start')
+	try {
+		Trace.info('searchtodb.ts main start')
 
-	const dbLocation = Util.maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
-	if (!dbLocation) {
-		Trace.error('Database location is not defined.')
-		process.exit(1)
+		const dbLocation = Util.maybeStr(process.env.FEEDGEN_SQLITE_LOCATION)
+		if (!dbLocation) {
+			Trace.error('Database location is not defined.')
+			process.exit(1)
+		}
+
+		Trace.debug('searchtodb.ts createDb start')
+		const db = createDb(dbLocation)
+		await migrateToLatest(db)
+		Trace.debug('searchtodb.ts createDb end')
+
+		const dbLoop: number = Util.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
+		const algos: Algos = Algos.getInstance()
+		const searchTagArray: string[] = algos.getSearchTagArray()
+		const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
+		for (const searchTag of searchTagArrayWithSharp) {
+			const searchResults: ResultData[] = await fetchSearchResults(searchTag, dbLoop)
+			Trace.info('Search ' + searchTag + ' end. hits = ' + searchResults.length)
+			await saveSearchResultsToDb(db, searchResults)
+		}
+		const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
+		for (const searchWord of searchWordArray) {
+			const searchResults: ResultData[] = await fetchSearchResults(searchWord, dbLoop)
+			Trace.info('Search ' + searchWord + ' end. hits = ' + searchResults.length)
+			await saveSearchResultsToDb(db, searchResults)
+		}
+
+		Trace.info('searchtodb.ts main end')
+	} catch (e) {
+		Trace.error('(searchtodb.ts main) ' + e)
 	}
-
-	Trace.debug('searchtodb.ts createDb start')
-	const db = createDb(dbLocation)
-	await migrateToLatest(db)
-	Trace.debug('searchtodb.ts createDb end')
-
-	const dbLoop: number = Util.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 1
-	const algos: Algos = Algos.getInstance()
-	const searchTagArray: string[] = algos.getSearchTagArray()
-	const searchTagArrayWithSharp: string[] = Util.addHashtagSharp(searchTagArray)
-	for (const searchTag of searchTagArrayWithSharp) {
-		const searchResults: ResultData[] = await fetchSearchResults(searchTag, dbLoop)
-		Trace.info('Search ' + searchTag + ' end. hits = ' + searchResults.length)
-		await saveSearchResultsToDb(db, searchResults)
-	}
-	const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
-	for (const searchWord of searchWordArray) {
-		const searchResults: ResultData[] = await fetchSearchResults(searchWord, dbLoop)
-		Trace.info('Search ' + searchWord + ' end. hits = ' + searchResults.length)
-		await saveSearchResultsToDb(db, searchResults)
-	}
-
-	Trace.info('searchtodb.ts end')
 }
 
 main()
