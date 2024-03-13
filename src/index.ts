@@ -24,35 +24,45 @@ const run = async () => {
 		serviceDid,
 	})
 
-	const numCPUs = os.cpus().length	// コア数取得
-	const cluster = require('cluster')
-	if (cluster.isMaster) {		// マスターなら
-		Trace.info(`master ${process.pid} started, numCPUs = ${numCPUs}`)
-		process.title = 'feedgen-master'
-
+	const numCPUs: number = os.cpus().length	// コア数取得
+	if (numCPUs == 1) {
+		process.title = 'feedgen-single'
+		await server.start()
 		if (process.env.FEEDGEN_USE_FIREHOSE === 'true') {
 			await server.runFirehose()
 		}
-
-		// CPUコア数のワーカーを起動
-		for (let i = 0; i < numCPUs - 1; i++) {		// マスター分1引く
-			cluster.fork()
-		}
-
-		cluster.on('exit', function (worker, code, signal) {
-			Trace.info(`worker ${worker.process.pid} died`)
-			cluster.fork()
-		})
-	} else {	// ワーカーなら
-		Trace.info(`worker ${process.pid} started`)
-		process.title = 'feedgen-worker'
-
-		await server.start()
-		Trace.info(
+		console.log(
 			`🤖 running feed generator at http://${server.cfg.listenhost}:${server.cfg.port}`,
 		)
-	}
+	} else {
+		const cluster = require('cluster')
+		if (cluster.isMaster) {		// マスターなら
+			Trace.info(`master ${process.pid} started, numCPUs = ${numCPUs}`)
+			process.title = 'feedgen-master'
 
+			if (process.env.FEEDGEN_USE_FIREHOSE === 'true') {
+				await server.runFirehose()
+			}
+
+			// CPUコア数のワーカーを起動
+			for (let i = 0; i < numCPUs - 1; i++) {		// マスター分1引く
+				cluster.fork()
+			}
+
+			cluster.on('exit', function (worker, code, signal) {
+				Trace.info(`worker ${worker.process.pid} died`)
+				cluster.fork()
+			})
+		} else {	// ワーカーなら
+			Trace.info(`worker ${process.pid} started`)
+			process.title = 'feedgen-worker'
+
+			await server.start()
+			Trace.info(
+				`🤖 running feed generator at http://${server.cfg.listenhost}:${server.cfg.port}`,
+			)
+		}
+	}
 }
 
 const maybeStr = (val?: string) => {

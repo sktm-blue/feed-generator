@@ -59,7 +59,7 @@ export class FeedGenerator {
 
     // /.well-known/did.jsonの取得要求をfeed-generatorで応答する処理
     // Webサーバーで直接did.jsonファイルを返す場合はコメントアウトする
-    //app.use(wellKnown(ctx))
+    app.use(wellKnown(ctx))
 
     return new FeedGenerator(app, db, firehose, cfg)
   }
