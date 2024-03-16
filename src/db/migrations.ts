@@ -39,6 +39,11 @@ migrations['001'] = {
       .on('post')
       .columns(['uri', 'lang1'])
       .execute()
+    await db.schema
+      .createIndex('tag_index')
+      .on('tag')
+      .columns(['tagStr'])
+      .execute()
   },
   async down(db: Kysely<unknown>) {
     await db.schema.dropTable('post').execute()
