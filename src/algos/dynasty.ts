@@ -7,19 +7,17 @@ class AlgoImpl extends AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 	// max 15 chars
 	public getShortname(): string {
-		return 'supermarketall'
+		return 'dynastyall'
 	}
 	
 	// 正規表現検索する場合の取得用ワード
 	public getSearchWordForRegexpArray(): string[] {
-		return [ 'supermarket', 'スーパーマーケット' ]
+		return [ 'dynasty', 'ダイナスティ' ]
 	}
 	// 正規表現クエリを追加
 	// シンプルな検索をする場合は return builder.where('text', 'regexp', '(パターン)')
 	protected addRegexpQuery(builder: any, db: Database): any {
-		return builder.where((eb) =>
-			eb('text', 'regexp', 'supermarket.{0,1}simu(l|r)ator').or('text', 'regexp', 'スーパーマーケット.{0,1}シ(ミュ|ュミ)レータ')
-		)
+		return builder.where('text', 'regexp', '(vampire|(ヴァ|バ)ンパイア|吸血鬼|sengoku|戦国|medieval|メディーバル|中世|lumberjack|farmer).{0,1}(dynasty|ダイナスティ)')
 	}
 
 	// 表示言語設定
@@ -33,4 +31,4 @@ class AlgoImpl extends AlgoAbstract {
 	}
 }
 
-export const supermarketall: AlgoAbstract = new AlgoImpl()
+export const dynastyall: AlgoAbstract = new AlgoImpl()
