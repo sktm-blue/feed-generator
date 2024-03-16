@@ -18,6 +18,7 @@ import { citiesall, citiesja } from './cities'
 import { omegacraall, omegacraja } from './omegacra'
 import { satisfactoryall, satisfactoryja } from './satisfactory'
 import { palall, palja, palimageall, palimageja } from './pal'
+import { supermarketall } from './supermarket'
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 //type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
@@ -45,6 +46,7 @@ export class Algos {
 		palja,
 		palimageall,
 		palimageja,
+		supermarketall,
 	]
 
 	private record: Record<string, AlgoHandler> = {}

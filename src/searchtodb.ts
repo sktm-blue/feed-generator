@@ -162,7 +162,7 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 		const algos: Algos = Algos.getInstance()
 		// ハッシュタグが適切に含まれているかを調べる
 		const tagArray: string[] = Util.findHashtags(textLower)
-		Trace.debug('tagArray = ' + tagArray)
+		//Trace.debug('tagArray = ' + tagArray)
 		const searchTagArray: string[] = algos.getSearchTagArray()
 		for (const tag of tagArray) {
 			for (const searchTag of searchTagArray) {
@@ -227,7 +227,14 @@ async function saveSearchResultsToDb(db: Database, dataArray: ResultData[]): Pro
 								.executeTakeFirst()
 						}
 
-						Trace.info('@@ Record is inserted. insertId = ' + insertId + ', tagArray = ' + tagArray)
+						let traceStr: string = '@@ Record is inserted. insertId = ' + insertId
+						if (tagArray.length > 0) {
+							traceStr = traceStr + ' tagArray = ' + tagArray
+						}
+						if (insertText.length > 0) {
+							traceStr = traceStr + ' insertText = ' + insertText
+						}
+						Trace.info(traceStr)
 					}
 
 					// 取り込めたtextを表示(消してもOK)
