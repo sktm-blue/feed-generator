@@ -111,6 +111,10 @@ export abstract class AlgoAbstract {
 			builder = builder.where('text', 'regexp', regexpPattern)
 		}
 
+		builder = builder
+			.orderBy('indexedAt', 'desc')	// 日時でソート(降順)
+			.orderBy('cid', 'desc')			// cidでソート(降順)
+
 		builder = builder.limit(params.limit)
 		
 		if (params.cursor) {
@@ -123,18 +127,13 @@ export abstract class AlgoAbstract {
 				// >>> for kysely 0.22.0
 				//.where('post.indexedAt', '<', timeStr)
 				//.orWhere((qb) => qb.where('post.indexedAt', '=', timeStr))
+				//.where('post.cid', '<', cid)
 				// <<< 
 				// >>> for kysely 0.27.0
-				.where((eb) =>
-					eb('post.indexedAt', '<', timeStr).or('post.indexedAt', '=', timeStr)
-				)
+				.where(eb => eb('post.indexedAt', '<', timeStr)
+    				.or(eb('post.indexedAt', '=', timeStr).and('post.cid', '<', cid)))
 				// <<< 
-				.where('post.cid', '<', cid)
 		}
-
-		builder = builder
-			.orderBy('indexedAt', 'desc')	// 日時でソート(降順)
-			.orderBy('cid', 'desc')			// cidでソート(降順)
 
 		const res = await builder.execute()
 
