@@ -15,7 +15,7 @@ class AlgoImplAll extends AlgoAbstract {
 		]
 	}
 	// 正規表現検索する場合のパターン
-	protected getRegexpPattern(): string {
+	public getRegexpPattern(): string {
 		return 'new gear'
 	} 
 
