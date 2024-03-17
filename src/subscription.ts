@@ -46,11 +46,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 				// text取得
 				let textLower: string = create.record.text.toLowerCase()
 
-				// 画像の添付があればALTテキスト追加
+				// 画像の添付があればALTテキストを追加し、数を数える
 				let recordImageCount: number = 0
-				if (AppBskyEmbedImages.isMain(create.record.embed)) {
-					const images: AppBskyEmbedImages.Image[] = create.record.embed.images
-					for (const image of images) {
+				if (AppBskyEmbedImages.isMain(create.record.embed) || AppBskyEmbedImages.isView(create.record.embed)) {
+					for (const image of create.record.embed.images) {
 						textLower += ' '
 						textLower += image.alt.toLowerCase()
 						recordImageCount += 1

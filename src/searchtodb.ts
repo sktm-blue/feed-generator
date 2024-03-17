@@ -19,9 +19,9 @@ import { Trace } from './trace'
 type ResultData = {
 	uri: string;
 	cid: string;
-	text: string;
+	textLower: string;
 	langs: string[];
-	images: AppBskyEmbedImages.Image[];
+	imageCount: number;
 	replyParent: string | null;
 	replyRoot: string | null;
 	indexedAt: string;
@@ -41,28 +41,33 @@ async function fetchSearchResults(ctx: AppContext,
 
 		let resultDataArray: ResultData[] = []
 		for (const post of response.data.posts) {
-			let text: string = ''
+			let textLower: string = ''
 			let langs: string[] = []
 			let replyParent: string | null = null
 			let replyRoot: string | null = null
 			if (AppBskyFeedPost.isRecord(post.record)) {
-				text = post.record.text
+				textLower = post.record.text.toLowerCase()
 				langs = post.record.langs ?? []
 				replyParent = post.record.reply?.parent?.uri ?? null
 				replyRoot = post.record.reply?.root?.uri ?? null
 			}
 
-			let embedImages: AppBskyEmbedImages.Image[] = []
-			if (AppBskyEmbedImages.isMain(post.embed)) {
-				embedImages = post.embed.images
+			// 画像の添付があればALTテキストを追加し、数を数える
+			let recordImageCount: number = 0
+			if (AppBskyEmbedImages.isMain(post.embed) || AppBskyEmbedImages.isView(post.embed)) {
+				for (const image of post.embed.images) {
+					textLower += ' '
+					textLower += image.alt.toLowerCase()
+					recordImageCount += 1
+				}
 			}
 
 			const resultData: ResultData = {
 				uri: post.uri,
 				cid: post.cid,
-				text: text,
+				textLower: textLower,
 				langs: langs,
-				images: embedImages,
+				imageCount: recordImageCount,
 				replyParent: replyParent,
 				replyRoot: replyRoot,
 				indexedAt: post.indexedAt,
@@ -88,26 +93,15 @@ async function insertSearchResultsToDb(db: Database, dataArray: ResultData[]): P
 	return new Promise(async (resolve, reject) => {
 		let insertedCount: number = 0
 		for (const data of dataArray) {
-			// text取得
-			let textLower: string = data.text.toLowerCase()
-
-			// 画像の添付があればALTテキスト追加
-			let recordImageCount: number = 0
-			for (const image of data.images) {
-				textLower += ' '
-				textLower += image.alt.toLowerCase()
-				recordImageCount += 1
-			}
-
 			// 検索条件通りのポストであるか確認
 			const algos: Algos = Algos.getInstance()
 			// ハッシュタグが含まれているか調べる
-			const tagArray: string[] = Util.findHashtags(textLower)
+			const tagArray: string[] = Util.findHashtags(data.textLower)
 			const tagMatchFlag: boolean = tagArray.some(tag => algos.searchTagArray.includes(tag))
 			// 正規表現検索にマッチするか調べる
 			let regexpMatchFlag: boolean = false
 			if (!tagMatchFlag) {
-				regexpMatchFlag = algos.regexpArray.some(regexp => regexp.test(textLower))
+				regexpMatchFlag = algos.regexpArray.some(regexp => regexp.test(data.textLower))
 			}
 
 			if (tagMatchFlag || regexpMatchFlag) {
@@ -122,12 +116,10 @@ async function insertSearchResultsToDb(db: Database, dataArray: ResultData[]): P
 					if (exists.length === 0) {
 						// 言語情報
 						const langs: number[] = Util.getLangs(data.langs)
-
 						// 投稿タイプ		
 						let postType: number = Util.getPostType(data.uri, data.replyParent)
-
 						// 正規表現使用時のみtextに挿入を行う
-						const insertText: string = (EnvValue.getInstance().useRegexp) ? textLower : ''
+						const insertText: string = (EnvValue.getInstance().useRegexp) ? data.textLower : ''
 
 						// postテーブルに挿入
 						const result = await trx.insertInto('post')
@@ -140,7 +132,7 @@ async function insertSearchResultsToDb(db: Database, dataArray: ResultData[]): P
 								lang3: langs[2],
 								postType: postType,
 								indexedAt: data.indexedAt,
-								imageCount: recordImageCount,
+								imageCount: data.imageCount,
 							})
 							.executeTakeFirst()
 
