@@ -100,13 +100,4 @@ export class Util {
 		return postType
 	}
 
-	public static maybeStr = (val?: string) => val
-
-	public static maybeInt = (val?: string) => {
-		if (!val) return undefined
-		const int = parseInt(val, 10)
-		if (isNaN(int)) return undefined
-		return int
-	}
-  
 }

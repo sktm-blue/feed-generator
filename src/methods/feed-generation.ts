@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
     const feedUri = new AtUri(params.feed)
 		const algos: Algos = Algos.getInstance()
-    const algo = algos.getAlgoHandler(feedUri.rkey)
+    const algo = algos.record[feedUri.rkey]
     if (
       feedUri.hostname !== ctx.cfg.publisherDid ||
       feedUri.collection !== 'app.bsky.feed.generator' ||

@@ -9,6 +9,7 @@ import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
+import { AtpAgent } from '@atproto/api'
 
 export class FeedGenerator {
   public app: express.Application
@@ -16,16 +17,19 @@ export class FeedGenerator {
   public db: Database
   public firehose: FirehoseSubscription
   public cfg: Config
+  public agent: AtpAgent
 
   constructor(
     app: express.Application,
     db: Database,
     firehose: FirehoseSubscription,
+    agent: AtpAgent,
     cfg: Config,
   ) {
     this.app = app
     this.db = db
     this.firehose = firehose
+    this.agent = agent
     this.cfg = cfg
   }
 
@@ -33,6 +37,7 @@ export class FeedGenerator {
     const app = express()
     const db = createDb(cfg.sqliteLocation)
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
+    const agent = new AtpAgent({ service: cfg.bskyServiceUrl })
 
     const didCache = new MemoryCache()
     const didResolver = new DidResolver({
@@ -52,6 +57,7 @@ export class FeedGenerator {
       db,
       didResolver,
       cfg,
+      agent,
     }
     feedGeneration(server, ctx)
     describeGenerator(server, ctx)
@@ -61,7 +67,7 @@ export class FeedGenerator {
     // Webサーバーで直接did.jsonファイルを返す場合はコメントアウトする
     app.use(wellKnown(ctx))
 
-    return new FeedGenerator(app, db, firehose, cfg)
+    return new FeedGenerator(app, db, firehose, agent, cfg)
   }
 
   async start(): Promise<http.Server> {

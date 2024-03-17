@@ -1,34 +1,27 @@
-import dotenv from 'dotenv'
 import FeedGenerator from './server'
+import { EnvValue } from './envvalue'
 import { Trace } from './trace'
-import * as cluster from 'cluster'
 import * as os from 'os'
 
 const run = async () => {
-	dotenv.config()
-	const hostname = maybeStr(process.env.FEEDGEN_HOSTNAME) ?? 'example.com'
-	const serviceDid =
-		maybeStr(process.env.FEEDGEN_SERVICE_DID) ?? `did:web:${hostname}`
+	const env: EnvValue = EnvValue.getInstance()
 	const server = FeedGenerator.create({
-		port: maybeInt(process.env.FEEDGEN_PORT) ?? 3000,
-		listenhost: maybeStr(process.env.FEEDGEN_LISTENHOST) ?? 'localhost',
-		sqliteLocation: maybeStr(process.env.FEEDGEN_SQLITE_LOCATION) ?? ':memory:',
-		subscriptionEndpoint:
-			maybeStr(process.env.FEEDGEN_SUBSCRIPTION_ENDPOINT) ??
-			'wss://bsky.network',
-		publisherDid:
-			maybeStr(process.env.FEEDGEN_PUBLISHER_DID) ?? 'did:example:alice',
-		subscriptionReconnectDelay:
-			maybeInt(process.env.FEEDGEN_SUBSCRIPTION_RECONNECT_DELAY) ?? 3000,
-		hostname,
-		serviceDid,
+		port: env.port,
+		listenhost: env.listenHost,
+		sqliteLocation: env.sqliteLocation,
+		subscriptionEndpoint: env.subscriptionEndpoint,
+		bskyServiceUrl: env.bskyServiceUrl,
+		publisherDid: env.publisherDid,
+		subscriptionReconnectDelay: env.subscriptionReconnectDelay,
+		hostname: env.hostname,
+		serviceDid: env.serviceDid,
 	})
 
 	const numCPUs: number = os.cpus().length	// コア数取得
 	if (numCPUs == 1) {
 		process.title = 'feedgen-single'
 		await server.start()
-		if (process.env.FEEDGEN_USE_FIREHOSE === 'true') {
+		if (env.useFirehose) {
 			await server.runFirehose()
 		}
 		console.log(
@@ -40,7 +33,7 @@ const run = async () => {
 			Trace.info(`master ${process.pid} started, numCPUs = ${numCPUs}`)
 			process.title = 'feedgen-master'
 
-			if (process.env.FEEDGEN_USE_FIREHOSE === 'true') {
+			if (env.useFirehose) {
 				await server.runFirehose()
 			}
 
@@ -63,18 +56,6 @@ const run = async () => {
 			)
 		}
 	}
-}
-
-const maybeStr = (val?: string) => {
-	if (!val) return undefined
-	return val
-}
-
-const maybeInt = (val?: string) => {
-	if (!val) return undefined
-	const int = parseInt(val, 10)
-	if (isNaN(int)) return undefined
-	return int
 }
 
 run()

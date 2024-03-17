@@ -2,6 +2,7 @@
 // https://qiita.com/tonkotsuboy_com/items/7443ffb6351e6bd2526b
 
 import fs from 'fs'
+import { EnvValue } from './envvalue'
 
 export class Trace {
     /**
@@ -10,7 +11,7 @@ export class Trace {
      * @param {string[]} ...args 出力したい文字列です。
      */
     public static debug(...args: any[]): void {
-        if (process.env.FEEDGEN_DEBUG_MODE === 'true') {
+        if (EnvValue.getInstance().debugMode) {
             const now: Date = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000))  // 日本時間で取得
             let msg: string = ""
             if (args.length > 0) {

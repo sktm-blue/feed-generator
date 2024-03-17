@@ -5,6 +5,7 @@ import {
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { Algos } from './algos'
 import * as AppBskyEmbedImages from './lexicon/types/app/bsky/embed/images'
+import { EnvValue } from './envvalue'
 import { Util } from './util'
 import { Constants } from './constants'
 import { Trace } from './trace'
@@ -59,36 +60,25 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 				//Trace.debug('imageCount = ' + recordImageCount)
 
 				// 本文+ALTテキストを見て収集するかどうか判定する
-				let includeFlag: boolean = false
 				const algos: Algos = Algos.getInstance()
-				// ハッシュタグが適切に含まれているかを調べる
+				// ハッシュタグが含まれているか調べる
 				const tagArray: string[] = Util.findHashtags(textLower)
-				//Trace.debug('tagArray = ' + tagArray)
-				const searchTagArray: string[] = algos.getSearchTagArray()
-				for (const tag of tagArray) {
-					for (const searchTag of searchTagArray) {
-						includeFlag = includeFlag || (tag === searchTag)			// 完全一致のみOK
-					}
-				}
-				// 検索ワードが適切に含まれているかを調べる
-				const searchWordArray: string[] = algos.getSearchWordForRegexpArray()
-				for (const searchWord of searchWordArray) {
-					includeFlag = includeFlag || textLower.includes(searchWord)		// 含まれていればOK
+				const tagMatchFlag: boolean =  tagArray.some(tag => algos.searchTagArray.includes(tag))
+				// 正規表現検索にマッチするか調べる
+				let regexpMatchFlag: boolean = false
+				if (!tagMatchFlag) {
+					regexpMatchFlag = algos.regexpArray.some(regexp => regexp.test(textLower))
 				}
 
-				if (includeFlag) {
+				if (tagMatchFlag || regexpMatchFlag) {
 					// ハッシュタグ
 					const tagArray: string[] = Util.findHashtags(textLower)
-					//Trace.debug('tagArray = ' + tagArray)
-
 					// 言語情報
 					const langs: number[] = Util.getLangs(create.record.langs)
-
 					// 投稿タイプ
 					const parentUri: string | null = create.record?.reply?.parent.uri ?? null
-					let postType: number = Util.getPostType(create.uri, parentUri)
+					const postType: number = Util.getPostType(create.uri, parentUri)
 
-					// map alf-related posts to a db row
 					dataArray.push({
 						uri: create.uri,
 						cid: create.cid,
@@ -102,6 +92,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 						imageCount: recordImageCount,
 					})
 
+					if (tagMatchFlag) {
+						Trace.debug('tagArray = ' + tagArray)
+					}
+					if (regexpMatchFlag) {
+						Trace.debug('textLower = ' + textLower)
+					}
 				}
 
 			}
@@ -113,58 +109,55 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 					.execute()
 			}
 
-			if (dataArray.length > 0) {
-				for (const data of dataArray) {
-					this.db.transaction().execute(async (trx) => {
-						// 同じuriを持つレコードがデータベースに存在するか確認
-						const exists = await trx
-							.selectFrom('post')
-							.select('uri')
-							.where('uri', '=', data.uri)
-							.execute()
-						// レコードが存在しない場合のみ挿入を実行
-						if (exists.length === 0) {
-							// 正規表現使用時のみtextに挿入を行う
-							const useRegexpFlag: string = Util.maybeStr(process.env.FEEDGEN_USE_REGEXP) ?? 'false'
-							const insertText: string = (useRegexpFlag === 'true') ? data.text : ''
+			for (const data of dataArray) {
+				this.db.transaction().execute(async (trx) => {
+					// 同じuriを持つレコードがデータベースに存在するか確認
+					const exists = await trx
+						.selectFrom('post')
+						.select('uri')
+						.where('uri', '=', data.uri)
+						.execute()
+					// レコードが存在しない場合のみ挿入を実行
+					if (exists.length === 0) {
+						// 正規表現使用時のみtextに挿入を行う
+						const insertText: string = (EnvValue.getInstance().useRegexp) ? data.text : ''
 
-							// postテーブルに挿入
-							const result = await trx
-								.insertInto('post')
-								.values({
-									uri: data.uri,
-									cid: data.cid,
-									text: insertText,
-									lang1: data.lang1,
-									lang2: data.lang2,
-									lang3: data.lang3,
-									postType: data.postType,
-									indexedAt: data.indexedAt,
-									imageCount: data.imageCount,
-								})
-								.onConflict((oc) => oc.doNothing())
-								.executeTakeFirst()
+						// postテーブルに挿入
+						const result = await trx
+							.insertInto('post')
+							.values({
+								uri: data.uri,
+								cid: data.cid,
+								text: insertText,
+								lang1: data.lang1,
+								lang2: data.lang2,
+								lang3: data.lang3,
+								postType: data.postType,
+								indexedAt: data.indexedAt,
+								imageCount: data.imageCount,
+							})
+							.onConflict((oc) => oc.doNothing())
+							.executeTakeFirst()
 
-							// tagテーブルに挿入
-							if (result.insertId !== undefined) {
-								const id: number = Number(result.insertId)
-								//Trace.debug('insertId = ' + id)
+						// tagテーブルに挿入
+						if (result.insertId !== undefined) {
+							const id: number = Number(result.insertId)
+							//Trace.debug('insertId = ' + id)
 
-								for (const tag of data.tagArray) {
-									await trx.insertInto('tag')
-										.values({
-											id: id,
-											tagStr: tag,
-										})
-										.executeTakeFirst()
-								}
-
-								Trace.info('@@ Record is inserted. insertId = ' + result.insertId)
+							for (const tag of data.tagArray) {
+								await trx.insertInto('tag')
+									.values({
+										id: id,
+										tagStr: tag,
+									})
+									.executeTakeFirst()
 							}
 
+							Trace.info('@@ Record is inserted. insertId = ' + result.insertId)
 						}
-					})
-				}
+
+					}
+				})
 			}
 		} catch (e) {
 			Trace.error('(FirehoseSubscription) ' + e)

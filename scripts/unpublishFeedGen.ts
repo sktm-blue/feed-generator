@@ -1,39 +1,33 @@
-import dotenv from 'dotenv'
 import { AtpAgent, BlobRef } from '@atproto/api'
-import fs from 'fs/promises'
 import { ids } from '../src/lexicon/lexicons'
+import { EnvValue } from '../src/envvalue'
 
 const run = async () => {
-  dotenv.config()
 
-  // YOUR bluesky handle
-  // Ex: user.bsky.social
-  const handle = ''
+	// A short name for the record that will show in urls
+	// Lowercase with no spaces.
+	// Ex: whats-hot
+	const recordName: string = ''
 
-  // A short name for the record that will show in urls
-  // Lowercase with no spaces.
-  // Ex: whats-hot
-  const recordName = ''
+	// -------------------------------------
+	// NO NEED TO TOUCH ANYTHING BELOW HERE
+	// -------------------------------------
+	const env: EnvValue = EnvValue.getInstance()
+	if (!env.publisherAppPassword) {
+		throw new Error('Please provide an app password in the .env file')
+	}
 
-  // -------------------------------------
-  // NO NEED TO TOUCH ANYTHING BELOW HERE
-  // -------------------------------------
-  if (!process.env.FEEDGEN_PUBLISH_APP_PASSWORD) {
-    throw new Error('Please provide an app password in the .env file')
-  }
-  const password = process.env.FEEDGEN_PUBLISH_APP_PASSWORD
+	// only update this if in a test environment
+	const agent = new AtpAgent({ service: env.bskyServiceUrl })
+	await agent.login({ identifier: env.publisherHandle, password: env.publisherAppPassword })
 
-  // only update this if in a test environment
-  const agent = new AtpAgent({ service: 'https://bsky.social' })
-  await agent.login({ identifier: handle, password })
+	await agent.api.com.atproto.repo.deleteRecord({
+		repo: agent.session?.did ?? '',
+		collection: ids.AppBskyFeedGenerator,
+		rkey: recordName,
+	})
 
-  await agent.api.com.atproto.repo.deleteRecord({
-    repo: agent.session?.did ?? '',
-    collection: ids.AppBskyFeedGenerator,
-    rkey: recordName,
-  })
-
-  console.log('All done 🎉')
+	console.log('All done 🎉')
 }
 
 run()
