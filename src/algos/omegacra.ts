@@ -1,5 +1,6 @@
 import { AlgoAbstract } from './algo-abstract'
 import { Constants } from '../constants'
+import { Database } from '../db';
 
 class AlgoImplAll extends AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
@@ -8,12 +9,13 @@ class AlgoImplAll extends AlgoAbstract {
 		return 'omegacraall'
 	}
 	
-	// ハッシュタグで検索する場合のタグ(「#」は不要)
-	public getTagArray(): string[] {
-		return [
-			 'omegacrafter', 
-			 'オメガクラフター',
-		]
+	// 正規表現検索する場合の取得用ワード
+	public getSearchWordForRegexpArray(): string[] {
+		return [ 'omegacrafter', 'オメガクラフター' ]
+	}
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return 'omega.{0,1}crafter|オメガクラフター'
 	}
 
 	// 表示言語設定

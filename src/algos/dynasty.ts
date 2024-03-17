@@ -14,10 +14,9 @@ class AlgoImpl extends AlgoAbstract {
 	public getSearchWordForRegexpArray(): string[] {
 		return [ 'dynasty', 'ダイナスティ' ]
 	}
-	// 正規表現クエリを追加
-	// シンプルな検索をする場合は return builder.where('text', 'regexp', '(パターン)')
-	protected addRegexpQuery(builder: any, db: Database): any {
-		return builder.where('text', 'regexp', '(vampire|(ヴァ|バ)ンパイア|吸血鬼|sengoku|戦国|medieval|メディーバル|中世|lumberjack|farmer).{0,1}(dynasty|ダイナスティ)')
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return '(vampire|(ヴァ|バ)ンパイア|吸血鬼|sengoku|戦国|medieval|メディーバル|中世|lumberjack|farmer).{0,1}(dynasty|ダイナスティ)'
 	}
 
 	// 表示言語設定

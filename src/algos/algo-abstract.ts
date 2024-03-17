@@ -18,15 +18,14 @@ export abstract class AlgoAbstract {
 	public getTagArray(): string[] {
 		return []
 	}
-	// 正規表現検索する場合はgetSearchWordForRegexpArray()とaddRegexpQuery()をオーバーライド
+	// 正規表現検索する場合はgetSearchWordForRegexpArray()getRegexpPattern()をオーバーライド
 	// 正規表現検索する場合の取得用ワード
 	public getSearchWordForRegexpArray(): string[] {
 		return []
 	}
-	// 正規表現クエリを追加
-	// シンプルな検索をする場合は return builder.where('text', 'regexp', '(パターン)')
-	protected addRegexpQuery(builder: any, db: Database): any {
-		return builder
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return ''
 	}
 
 	// 表示言語設定
@@ -107,7 +106,10 @@ export abstract class AlgoAbstract {
 		}
 
 		// 正規表現検索
-		builder = this.addRegexpQuery(builder, ctx.db)
+		const regexpPattern: string = this.getRegexpPattern()
+		if (regexpPattern.length > 0) {
+			builder = builder.where('text', 'regexp', regexpPattern)
+		}
 
 		builder = builder.limit(params.limit)
 		

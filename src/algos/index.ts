@@ -12,6 +12,7 @@ import { AlgoAbstract } from './algo-abstract'
 import { cat } from './cat'
 import { newgearall, newgearja } from './newgear'
 import { skyfeedall, skyfeedja } from './skyfeed'
+import { feedgen } from './feedgen'
 import { sky } from './sky'
 import { raftall, raftja } from './raft'
 import { citiesall, citiesja } from './cities'
@@ -25,15 +26,13 @@ type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 //type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
 
 export class Algos {
-	// インスタンス
-	private static _instance: Algos
-
 	private algoArray: AlgoAbstract[] = [
 		//cat,
 		//newgearall,
 		//newgearja,
 		//skyfeedall,
 		//skyfeedja,
+		feedgen,
 		sky,
 		raftall,
 		raftja,
@@ -49,12 +48,16 @@ export class Algos {
 		palimageja,
 		supermarketall,
 		dynastyall,
-	]
+		]
 
-	private record: Record<string, AlgoHandler> = {}
-	private searchTagArray: string[] = []
-	private searchWordForRegexpArray: string[] = []
+	// インスタンス
+	private static _instance: Algos
 
+	public readonly record: Record<string, AlgoHandler> = {}
+	public readonly searchTagArray: string[] = []
+	public readonly searchWordForRegexpArray: string[] = []
+	public readonly regexpArray: RegExp[] = []
+	
 	// プライベートコンストラクタ
 	private constructor() {
 		let tempSearchTagArray: string[] = []
@@ -68,11 +71,17 @@ export class Algos {
 					tempSearchTagArray.push(tag)
 				}
 			}
+
 			const algoWordArray: string[] | null = algo.getSearchWordForRegexpArray()
 			if (algoWordArray != null) {
 				for (const word of algoWordArray) {
 					tempSearchWordForRegexpArray.push(word)
 				}
+			}
+
+			const regexpPattern: string = algo.getRegexpPattern()
+			if (regexpPattern.length > 0) {
+				this.regexpArray.push(new RegExp(regexpPattern, 'i'))
 			}
 		}
 
@@ -90,21 +99,5 @@ export class Algos {
 
 		// 生成済みのインスタンスを返す
 		return this._instance;
-	}
-
-	public getAlgos(): Record<string, AlgoHandler> {
-		return this.record
-	}
-
-	public getAlgoHandler(shortName: string): AlgoHandler {
-		return this.record[shortName]
-	}
-
-	public getSearchTagArray(): string[] {
-		return this.searchTagArray
-	}
-
-	public getSearchWordForRegexpArray(): string[] {
-		return this.searchWordForRegexpArray
 	}
 }

@@ -14,12 +14,9 @@ class AlgoImpl extends AlgoAbstract {
 	public getSearchWordForRegexpArray(): string[] {
 		return [ 'supermarket', 'スーパーマーケット' ]
 	}
-	// 正規表現クエリを追加
-	// シンプルな検索をする場合は return builder.where('text', 'regexp', '(パターン)')
-	protected addRegexpQuery(builder: any, db: Database): any {
-		return builder.where((eb) =>
-			eb('text', 'regexp', 'supermarket.{0,1}simu(l|r)ator').or('text', 'regexp', 'スーパーマーケット.{0,1}シ(ミュ|ュミ)レータ')
-		)
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return 'supermarket.{0,1}simu(l|r)ator|スーパーマーケット.{0,1}シ(ミュ|ュミ)レータ'
 	}
 
 	// 表示言語設定

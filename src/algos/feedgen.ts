@@ -1,21 +1,22 @@
 import { AlgoAbstract } from './algo-abstract'
 import { Constants } from '../constants'
 import { Database } from '../db';
+import { expressionBuilder } from 'kysely'
 
-class AlgoImplAll extends AlgoAbstract {
+class AlgoImpl extends AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 	// max 15 chars
 	public getShortname(): string {
-		return 'raftall'
+		return 'feedgen'
 	}
-
+	
 	// 正規表現検索する場合の取得用ワード
 	public getSearchWordForRegexpArray(): string[] {
-		return [ 'raft', 'ラフト' ]
+		return [ 'feedgen', 'generator', 'フィードサーバ', 'フィードジェネレータ', 'indexer' ]
 	}
 	// 正規表現検索時のパターン
 	public getRegexpPattern(): string {
-		return '\\braft\\b|(^|[^ァ-ヴー])ラフト($|[^ァ-ヴー])'
+		return '[^=]feedgen|feed[-\s]*generator|フィード(サーバ|ジェネレータ)|indexer[^r]'
 	}
 
 	// 表示言語設定
@@ -29,18 +30,4 @@ class AlgoImplAll extends AlgoAbstract {
 	}
 }
 
-class AlgoImplJa extends AlgoImplAll {
-	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
-	// max 15 chars
-	public getShortname(): string {
-		return 'raftja'
-	}
-
-	// 表示言語設定
-	protected getLangSwitch(): number {
-		return Constants.LANG_SWITCH.ONLY_JA
-	}
-}
-
-export const raftall: AlgoAbstract = new AlgoImplAll()
-export const raftja: AlgoAbstract = new AlgoImplJa()
+export const feedgen: AlgoAbstract = new AlgoImpl()

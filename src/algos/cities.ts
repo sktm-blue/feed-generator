@@ -1,5 +1,6 @@
 import { AlgoAbstract } from './algo-abstract'
 import { Constants } from '../constants'
+import { Database } from '../db';
 
 class AlgoImplAll extends AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
@@ -8,17 +9,13 @@ class AlgoImplAll extends AlgoAbstract {
 		return 'citiesall'
 	}
 	
-	// ハッシュタグで検索する場合のタグ(「#」は不要)
-	public getTagArray(): string[] {
-		return [
-			'citiesskylines', 
-			'citiesskylines2', 
-			'CitiesSkylinesII',
-			'シティーズスカイライン',
-			'シティーズスカイライン2',
-			'シティーズスカイライン２',
-			'シティーズスカイラインII',
-		]
+	// 正規表現検索する場合の取得用ワード
+	public getSearchWordForRegexpArray(): string[] {
+		return [ 'skylines', 'シティーズ' ]
+	}
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return 'cities.{0,3}skylines|[^オ]シティーズ'
 	}
 
 	// 表示言語設定
