@@ -4,6 +4,7 @@ import { DatabaseSchema } from './schema'
 import { migrationProvider } from './migrations'
 import { Util } from '../util'
 import { EnvValue } from '../envvalue'
+import { Trace } from '../trace'
 
 export const createDb = (location: string): Database => {
 
@@ -16,7 +17,15 @@ export const createDb = (location: string): Database => {
 		dialect: new SqliteDialect({
 			//database: new SqliteDb(location),
 			database: sqdb,
+
 		}),
+		log: (event) => {
+			if (event.level == 'query') {
+				const q = event.query;
+				const time = Math.round(event.queryDurationMillis * 100) / 100;
+				Trace.debug(`\u001b[34mkysely:sql\u001b[0m [${q.sql}] parameters: [${q.parameters}] time: ${time}`);
+			}
+		}
 	})
 }
 
