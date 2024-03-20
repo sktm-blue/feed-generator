@@ -8,12 +8,15 @@ class AlgoImplAll extends AlgoAbstract {
 		return 'skyfeedall'
 	}
 	
-	// ハッシュタグで検索する場合のタグ(「#」は不要)
-	public getTagArray(): string[] {
-		return [
-			 'skyfeed', 
-		]
+	// 正規表現検索する場合の取得用ワード
+	public getSearchWordForRegexpArray(): string[] {
+		return [ 'skyfeed', 'builder' ]
 	}
+	// 正規表現検索時のパターン
+	public getRegexpPattern(): string {
+		return 'skyfeed|feed.{0,1}builder'
+	}
+
 
 	// 表示言語設定
 	protected getLangSwitch(): number {

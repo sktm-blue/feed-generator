@@ -21,6 +21,7 @@ import { satisfactoryall, satisfactoryja } from './satisfactory'
 import { palall, palja, palimageall, palimageja } from './pal'
 import { supermarketall } from './supermarket'
 import { dynastyall } from './dynasty'
+import { frequenttags } from './frequenttags'
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 //type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
@@ -30,8 +31,8 @@ export class Algos {
 		//cat,
 		//newgearall,
 		//newgearja,
-		//skyfeedall,
-		//skyfeedja,
+		skyfeedall,
+		skyfeedja,
 		feedgen,
 		sky,
 		raftall,
@@ -48,12 +49,13 @@ export class Algos {
 		palimageja,
 		supermarketall,
 		dynastyall,
+		//frequenttags,
 		]
 
 	// インスタンス
 	private static _instance: Algos
 
-	public readonly record: Record<string, AlgoHandler> = {}
+	public readonly record: Record<string, AlgoAbstract> = {}
 	public readonly searchTagArray: string[] = []
 	public readonly searchWordForRegexpArray: string[] = []
 	public readonly regexpArray: RegExp[] = []
@@ -63,7 +65,7 @@ export class Algos {
 		let tempSearchTagArray: string[] = []
 		let tempSearchWordForRegexpArray: string[] = []
 		for (const algo of this.algoArray) {
-			this.record[algo.getShortname()] = algo.handler
+			this.record[algo.getShortname()] = algo
 
 			const algoTagArray: string[] | null = algo.getTagArray()
 			if (algoTagArray != null) {

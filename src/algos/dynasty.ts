@@ -16,7 +16,7 @@ class AlgoImpl extends AlgoAbstract {
 	}
 	// 正規表現検索時のパターン
 	public getRegexpPattern(): string {
-		return '(vampire|(ヴァ|バ)ンパイア|吸血鬼|sengoku|戦国|medieval|メディーバル|中世|lumberjack|farmer).{0,1}(dynasty|ダイナスティ)'
+		return '(vampire|(ヴァ|バ)ンパイア|吸血鬼|sengoku|戦国|medieval|メディーバル|中世|lumberjack|farmer).{0,3}(dynasty|ダイナスティ)'
 	}
 
 	// 表示言語設定
