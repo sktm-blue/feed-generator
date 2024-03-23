@@ -21,6 +21,7 @@ export class EnvValue {
 	public readonly useFirehose: boolean
 	public readonly useRegexp: boolean
 	public readonly searchToDbLoop: number
+	public readonly enableWellKnown: boolean
 	public readonly authDebugMode: boolean
 	public readonly debugMode: boolean
 	
@@ -42,6 +43,7 @@ export class EnvValue {
 		this.useFirehose = this.maybeBool(process.env.FEEDGEN_USE_FIREHOSE) ?? true
 		this.useRegexp = this.maybeBool(process.env.FEEDGEN_USE_REGEXP) ?? true
 		this.searchToDbLoop = this.maybeInt(process.env.FEEDGEN_SEARCH_TO_DB_LOOP) ?? 3000
+		this.enableWellKnown = this.maybeBool(process.env.FEEDGEN_ENABLE_WELL_KNOWN) ?? true
 		this.debugMode = this.maybeBool(process.env.FEEDGEN_DEBUG_MODE) ?? false
 		this.authDebugMode = this.maybeBool(process.env.FEEDGEN_AUTH_DEBUG_MODE) ?? false
 	}

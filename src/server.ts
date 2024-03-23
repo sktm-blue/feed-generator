@@ -10,6 +10,7 @@ import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 import { AtpAgent } from '@atproto/api'
+import { EnvValue } from './envvalue'
 
 export class FeedGenerator {
   public app: express.Application
@@ -64,8 +65,10 @@ export class FeedGenerator {
     app.use(server.xrpc.router)
 
     // /.well-known/did.jsonの取得要求をfeed-generatorで応答する処理
-    // Webサーバーで直接did.jsonファイルを返す場合はコメントアウトする
-    app.use(wellKnown(ctx))
+    const env: EnvValue = EnvValue.getInstance()
+    if (env.enableWellKnown) {
+      app.use(wellKnown(ctx))
+    }
 
     return new FeedGenerator(app, db, firehose, agent, cfg)
   }
