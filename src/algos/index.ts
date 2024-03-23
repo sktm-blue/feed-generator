@@ -21,6 +21,7 @@ import { satisfactoryall, satisfactoryja } from './satisfactory'
 import { palall, palja, palimageall, palimageja } from './pal'
 import { supermarketall } from './supermarket'
 import { dynastyall } from './dynasty'
+import { toptags } from './toptags'
 
 export class Algos {
 	private algoArray: AlgoAbstract[] = [
@@ -45,6 +46,7 @@ export class Algos {
 		palimageja,
 		supermarketall,
 		dynastyall,
+		toptags,
 		]
 
 	// インスタンス
