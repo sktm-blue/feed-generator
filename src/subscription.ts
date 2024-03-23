@@ -29,8 +29,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
 		try {
 			//Trace.debug('handleEvent')
-			this.execCount++
 			this.traceCount()
+			this.execCount++
 			const env: EnvValue = EnvValue.getInstance()
 
 			const ops = await getOpsByType(evt)
