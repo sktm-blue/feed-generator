@@ -4,41 +4,49 @@ import { AppContext } from '../config'
 import { Algos } from '../algos'
 import { validateAuth } from '../auth'
 import { AtUri } from '@atproto/syntax'
+import { EnvValue } from '../envvalue'
 import { Trace } from '../trace'
+import { AlgoAbstract } from '../algos/algo-abstract'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
-    const feedUri = new AtUri(params.feed)
+	server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
+		const feedUri = new AtUri(params.feed)
 		const algos: Algos = Algos.getInstance()
-    const algo = algos.record[feedUri.rkey]
-    if (
-      feedUri.hostname !== ctx.cfg.publisherDid ||
-      feedUri.collection !== 'app.bsky.feed.generator' ||
-      !algo
-    ) {
-      throw new InvalidRequestError(
-        'Unsupported algorithm',
-        'UnsupportedAlgorithm',
-      )
-    }
+		const algo: AlgoAbstract = algos.record[feedUri.rkey]
+		if (
+			feedUri.hostname !== ctx.cfg.publisherDid ||
+			feedUri.collection !== 'app.bsky.feed.generator'
+		) {
+			throw new InvalidRequestError(
+				'Unsupported algorithm',
+				'UnsupportedAlgorithm',
+			)
+		}
 
-    // Example of how to check auth if giving user-specific results:
-    /*
-    const requesterDid = await validateAuth(
-      req,
-      ctx.cfg.serviceDid,
-      ctx.didResolver,
-    )
-    */
+		const startTime: number = performance.now()
+		let body: any
+		if (algo.getAuthFlag()) {
+			let requesterDid: string = ''
+			const env = EnvValue.getInstance()
+			if (env.authDebugMode) {
+				requesterDid = env.publisherDid
+			} else {
+				requesterDid = await validateAuth(
+					req,
+					ctx.cfg.serviceDid,
+					ctx.didResolver,
+				)
+			}
+			body = await algo.handler(ctx, params, requesterDid)
+		} else {
+			body = await algo.handler(ctx, params)
+		}
 
-    const body = await algo(ctx, params)
-    //const body = await algo(ctx, params, requesterDid)
-    
-    Trace.info('fg ' + feedUri.rkey)
+		Trace.info(`fg ${feedUri.rkey} time = ${performance.now() - startTime} ms`)
 
-    return {
-      encoding: 'application/json',
-      body: body,
-    }
-  })
+		return {
+			encoding: 'application/json',
+			body: body,
+		}
+	})
 }

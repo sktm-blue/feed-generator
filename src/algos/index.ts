@@ -21,10 +21,6 @@ import { satisfactoryall, satisfactoryja } from './satisfactory'
 import { palall, palja, palimageall, palimageja } from './pal'
 import { supermarketall } from './supermarket'
 import { dynastyall } from './dynasty'
-import { frequenttags } from './frequenttags'
-
-type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
-//type AlgoHandler = (ctx: AppContext, params: QueryParams, requester: string) => Promise<AlgoOutput>
 
 export class Algos {
 	private algoArray: AlgoAbstract[] = [
@@ -49,7 +45,6 @@ export class Algos {
 		palimageja,
 		supermarketall,
 		dynastyall,
-		//frequenttags,
 		]
 
 	// インスタンス

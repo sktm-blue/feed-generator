@@ -1,6 +1,7 @@
 import express from 'express'
 import { verifyJwt, AuthRequiredError } from '@atproto/xrpc-server'
 import { DidResolver } from '@atproto/identity'
+import { Trace } from './trace'
 
 export const validateAuth = async (
   req: express.Request,
@@ -8,6 +9,7 @@ export const validateAuth = async (
   didResolver: DidResolver,
 ): Promise<string> => {
   const { authorization = '' } = req.headers
+  Trace.debug('authorization = ' + authorization)
   if (!authorization.startsWith('Bearer ')) {
     throw new AuthRequiredError()
   }

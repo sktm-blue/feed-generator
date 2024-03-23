@@ -12,6 +12,11 @@ export abstract class AlgoAbstract {
 	// Blueskyからフィードサーバーにリクエストを投げる時使用される短い名前
 	// max 15 chars
 	public abstract getShortname(): string
+	// 認証が必要なフィードはgetAuthFlag()をオーバーライドしてtrueを返す
+	// 認証を必要とするフィードかどうか
+	public getAuthFlag(): boolean {
+		return false
+	}
 
 	// ハッシュタグ検索する場合はgetTagArray()をオーバーライド
 	// ハッシュタグで検索する場合のタグ(「#」は不要)
@@ -48,8 +53,7 @@ export abstract class AlgoAbstract {
 	}
 
 	// URI一覧構築
-	public handler = async (ctx: AppContext, params: QueryParams) => {
-	//public handler = async (ctx: AppContext, params: QueryParams, requester: string) => {
+	public async handler(ctx: AppContext, params: QueryParams, requester: string = '') {
 
 		const tagArray: string[] = this.getTagArray()
 		const searchWordForRegexpArray: string[] = this.getSearchWordForRegexpArray()
