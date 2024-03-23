@@ -29,6 +29,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
 		try {
 			//Trace.debug('handleEvent')
+			this.execCount++
+			this.traceCount()
 
 			const ops = await getOpsByType(evt)
 
@@ -152,6 +154,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 									.executeTakeFirst()
 							}
 
+							this.insertedCount++
 							Trace.info('@@ Record is inserted. insertId = ' + result.insertId)
 						}
 
@@ -159,7 +162,26 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 				})
 			}
 		} catch (e) {
+			this.errorCount++
 			Trace.error('(FirehoseSubscription) ' + e)
 		}
+	}
+
+	private execCount: number = 0
+	private insertedCount: number = 0
+	private errorCount: number = 0
+	private prevHours: number = -1
+
+	// 実行回数をログに出力
+    private traceCount(): void {
+		const now: Date = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000))  // 日本時間で取得
+		const nowHours: number = now.getHours()
+		if (this.prevHours >= 0 && this.prevHours != nowHours) {
+			Trace.info(`FirehoseSubscription exec = ${this.execCount}, inserted = ${this.insertedCount}, error = ${this.errorCount}`)
+			this.execCount = 0
+			this.insertedCount = 0
+			this.errorCount = 0
+		}
+		this.prevHours = nowHours
 	}
 }
