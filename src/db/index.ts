@@ -20,7 +20,8 @@ export const createDb = (location: string): Database => {
 
 		}),
 		log: (event) => {
-			if (event.level == 'query') {
+			const env: EnvValue = EnvValue.getInstance()
+			if (env.debugMode && env.enableKyselyLog && event.level == 'query') {
 				const q = event.query;
 				const time = Math.round(event.queryDurationMillis * 100) / 100;
 				Trace.debug(`\u001b[34mkysely:sql\u001b[0m [${q.sql}] parameters: [${q.parameters}] time: ${time}`);

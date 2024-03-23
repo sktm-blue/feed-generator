@@ -68,9 +68,9 @@ export class Util {
 			Constants.LANG_NUMBER.UNDEFINED
 		]
 		if (langStrArray !== undefined) {
+			//Trace.debug(langStrArray)   // jaやenが出力される
 			for (let i: number = 0; i < langs.length; i++) {
 				if (i < langStrArray.length) {
-					Trace.debug(langStrArray[i])   // jaやenが出力される
 					if (langStrArray[i].length > 0) {
 						if (langStrArray[i] == Constants.LANG_CODE.JA) {
 							langs[i] = Constants.LANG_NUMBER.JA

@@ -31,6 +31,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 			//Trace.debug('handleEvent')
 			this.execCount++
 			this.traceCount()
+			const env: EnvValue = EnvValue.getInstance()
 
 			const ops = await getOpsByType(evt)
 
@@ -71,11 +72,15 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 					regexpMatchFlag = algos.regexpArray.some(regexp => regexp.test(textLower))
 				}
 
+				// 言語情報
+				const langs: number[] = Util.getLangs(create.record.langs)
+				if (langs[0] == Constants.LANG_NUMBER.JA) {
+					this.jaCount++
+				} else if (langs[0] == Constants.LANG_NUMBER.EN) {
+					this.enCount++
+				}
+
 				if (tagMatchFlag || regexpMatchFlag) {
-					// ハッシュタグ
-					const tagArray: string[] = Util.findHashtags(textLower)
-					// 言語情報
-					const langs: number[] = Util.getLangs(create.record.langs)
 					// 投稿タイプ
 					const parentUri: string | null = create.record?.reply?.parent.uri ?? null
 					const postType: number = Util.getPostType(create.uri, parentUri)
@@ -93,11 +98,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 						imageCount: recordImageCount,
 					})
 
-					if (tagMatchFlag) {
-						Trace.debug('tagArray = ' + tagArray)
-					}
-					if (regexpMatchFlag) {
-						Trace.debug('textLower = ' + textLower)
+					if (env.debugMode) {
+						if (tagMatchFlag) {
+							Trace.debug('tagArray = ' + tagArray)
+						}
+						if (regexpMatchFlag) {
+							Trace.debug('textLower = ' + textLower)
+						}
 					}
 				}
 
@@ -168,6 +175,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 	}
 
 	private execCount: number = 0
+	private jaCount: number = 0
+	private enCount: number = 0
 	private insertedCount: number = 0
 	private errorCount: number = 0
 	private prevHours: number = -1
@@ -177,8 +186,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 		const now: Date = new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000))  // 日本時間で取得
 		const nowHours: number = now.getHours()
 		if (this.prevHours >= 0 && this.prevHours != nowHours) {
-			Trace.info(`FirehoseSubscription exec = ${this.execCount}, inserted = ${this.insertedCount}, error = ${this.errorCount}`)
+			Trace.info(`FirehoseSubscription exec = ${this.execCount}(ja = ${this.jaCount}, en = ${this.enCount}), inserted = ${this.insertedCount}, error = ${this.errorCount}`)
 			this.execCount = 0
+			this.jaCount = 0
+			this.enCount = 0
 			this.insertedCount = 0
 			this.errorCount = 0
 		}
