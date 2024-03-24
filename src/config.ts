@@ -19,4 +19,6 @@ export type Config = {
   bskyServiceUrl: string
   publisherDid: string
   subscriptionReconnectDelay: number
+  publisherHandle: string
+  publisherAppPassword: string
 }

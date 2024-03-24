@@ -9,7 +9,7 @@ import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, BskyAgent } from '@atproto/api'
 import { EnvValue } from './envvalue'
 
 export class FeedGenerator {
@@ -18,13 +18,15 @@ export class FeedGenerator {
   public db: Database
   public firehose: FirehoseSubscription
   public cfg: Config
-  public agent: AtpAgent
+  //public agent: AtpAgent
+  public agent: BskyAgent
 
   constructor(
     app: express.Application,
     db: Database,
     firehose: FirehoseSubscription,
-    agent: AtpAgent,
+    //agent: AtpAgent,
+    agent: BskyAgent,
     cfg: Config,
   ) {
     this.app = app
@@ -38,7 +40,9 @@ export class FeedGenerator {
     const app = express()
     const db = createDb(cfg.sqliteLocation)
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
-    const agent = new AtpAgent({ service: cfg.bskyServiceUrl })
+    //const agent = new AtpAgent({ service: cfg.bskyServiceUrl })
+		const agent = new BskyAgent({ service: cfg.bskyServiceUrl })
+    agent.login({ identifier: cfg.publisherHandle, password: cfg.publisherAppPassword })
 
     const didCache = new MemoryCache()
     const didResolver = new DidResolver({

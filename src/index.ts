@@ -15,8 +15,10 @@ const run = async () => {
 		subscriptionReconnectDelay: env.subscriptionReconnectDelay,
 		hostname: env.hostname,
 		serviceDid: env.serviceDid,
+		publisherHandle: env.publisherHandle,
+		publisherAppPassword: env.publisherAppPassword,
 	})
-
+  
 	const numCPUs: number = os.cpus().length	// コア数取得
 	if (numCPUs == 1) {
 		process.title = 'feedgen-single'

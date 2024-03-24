@@ -9,7 +9,7 @@ import { AtUri } from '@atproto/syntax'
 import { Algos } from './algos'
 import { DidResolver, MemoryCache } from '@atproto/identity'
 import { AppContext, Config } from './config'
-import { AtpAgent } from '@atproto/api'
+import { BskyAgent } from '@atproto/api'
 import { isObj, hasProp } from './lexicon/util'
 import { EnvValue } from './envvalue'
 import { Util } from './util'
@@ -195,7 +195,7 @@ async function main() {
 	if (!env.publisherAppPassword) {
 		throw new Error('Please provide an app password in the .env file')
 	}
-	const agent = new AtpAgent({ service: env.bskyServiceUrl })
+	const agent = new BskyAgent({ service: env.bskyServiceUrl })
 	await agent.login({ identifier: env.publisherHandle, password: env.publisherAppPassword })
 
 	const cfg: Config = {
@@ -208,6 +208,8 @@ async function main() {
 		subscriptionReconnectDelay: env.subscriptionReconnectDelay,
 		hostname: env.hostname,
 		serviceDid: env.serviceDid,
+		publisherHandle: env.publisherHandle,
+		publisherAppPassword: env.publisherAppPassword,
 	}
 	const ctx: AppContext = {
 		db,

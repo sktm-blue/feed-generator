@@ -31,11 +31,18 @@ class AlgoImpl extends AlgoAbstract {
 		return true
 	}
 
+	private readonly MAX_TAGS: number = 10
+	//private readonly BOT_HANDLER: string = ''
+	//private readonly BOT_PASSWORD: string = ''
+
+	//private botAgent: BskyAgent | undefined = undefined
+
 	// URI一覧構築
 	public async handler(ctx: AppContext, params: QueryParams, requester: string = '') {
 
 		let startTime: number
 		let endTime: number
+		const env: EnvValue = EnvValue.getInstance()
 		
 		Trace.debug('handler 1 requester = ' + requester)
 		startTime = performance.now()
@@ -43,16 +50,22 @@ class AlgoImpl extends AlgoAbstract {
 			throw new Error('requester is empty')
 		}
 
-		const env: EnvValue = EnvValue.getInstance()
-		const agent = new AtpAgent({ service: env.bskyServiceUrl })
-		await agent.login({ identifier: env.publisherHandle, password: env.publisherAppPassword })
-		endTime = performance.now()
-		Trace.debug('handler 2 time = ' + (endTime - startTime))
-		startTime = endTime
+		// ログイン
+		//if (this.botAgent === undefined) {
+		//	this.botAgent = new BskyAgent({ service: env.bskyServiceUrl })
+		//	Trace.debug('this.botAgent new BskyAgent')
+		//}
+		//Trace.debug('this.botAgent hasSession = ' + this.botAgent.hasSession)
+		//if (!this.botAgent.hasSession) {
+		//	const responseLogin = await this.botAgent.login({ identifier: this.BOT_HANDLER, password: this.BOT_PASSWORD })
+		//	Trace.debug('this.botAgent responseLogin = ' + responseLogin.success)
+		//}
+		//endTime = performance.now()
+		//Trace.debug('handler 2 time = ' + (endTime - startTime))
+		//startTime = endTime
 
 		// APIのgetAuthorFeedを実行する
-		//const response = await ctx.agent.api.app.bsky.feed.getAuthorFeed({ actor, limit: 100, cursor: '' })
-		const response = await agent.api.app.bsky.feed.getAuthorFeed({ actor: requester, limit: 100, cursor: '' })
+		const response = await ctx.agent.api.app.bsky.feed.getAuthorFeed({ actor: requester, limit: 100, cursor: '' })
 		endTime = performance.now()
 		Trace.debug('handler 3 time = ' + (endTime - startTime))
 		startTime = endTime
@@ -78,127 +91,41 @@ class AlgoImpl extends AlgoAbstract {
 
 		// tagCountMapをvalueで降順ソートする
 		const sortedTagCountMap: Map<string, TagValue> = new Map([...tagCountMap].sort((a, b) => b[1].count - a[1].count))
-		const tagCount: number = (sortedTagCountMap.size < 10 ? sortedTagCountMap.size : 10)
 
+		// tagCountMapの先頭からURIを格納
 		let feed: any[] = []
-		let i: number = 0
+		let rank: number = 1
+		const tagCount: number = (sortedTagCountMap.size < this.MAX_TAGS ? sortedTagCountMap.size : this.MAX_TAGS)
+		//let postText: string = 'Your hashtag top' + tagCount + '\n'
 		for (const [key, value] of sortedTagCountMap) {
+			//postText += ` ${rank} : #${key} (${value.count})\n`
 			feed.push({ post: value.uri })
-			i++
-			if (i >= tagCount) {
+
+			rank++
+			if (rank > tagCount) {
 				break
 			}
 		}
-
+		// 固定ポストを先頭に挿入
+		//var rt = new RichText({ text: postText })
+		//await rt.detectFacets( this.botAgent )	  
+		//var res = await this.botAgent.post({
+		//  $type: 'app.bsky.feed.post',
+		//  text: rt.text,
+		//  facets: rt.facets,
+		//  langs: ['ja'],
+		//  createdAt: new Date().toISOString()
+		//})
+		//Trace.debug('res.uri = ' + res.uri)
+		//feed.unshift({ post: res.uri })
 		endTime = performance.now()
 		Trace.debug('handler 5 time = ' + (endTime - startTime))
 		startTime = endTime
+
 		return {
-			cursor : '',
+			cursor: '',
 			feed,
 		}
-		
-		/* 上位ハッシュタグを投稿しようとしたが、うまくリンクが張られない
-		let postText: string = '#hashtag Your hashtag top' + tagCount + '\n'
-		let i: number = 1
-		let facets: Facet[] = []
-		const text = new UnicodeString(postText)
-
-		const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
-		let match
-		let tags: string[] = []
-		while ((match = re.exec(text.utf16))) {
-		  let [tag] = match
-		  const hasLeadingSpace = /^\s/.test(tag)
-	
-		  tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
-	
-		  // inclusive of #, max of 64 chars
-		  if (tag.length > 66) continue
-	
-		  const index = match.index + (hasLeadingSpace ? 1 : 0)
-	
-		  const tag2: string = tag.replace(/^#/, '')
-		  const tagobj: FacetTag = { tag: tag2 }
-		  facets.push({
-			//$type: 'app.bsky.richtext.facet',
-			index: {
-			  byteStart: text.utf16IndexToUtf8Index(index),
-			  byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
-			},
-			features: [
-			  //{
-				//$type: 'app.bsky.richtext.facet#tag',
-				//tag: tag.replace(/^#/, ''),
-			  //},
-			  tagobj,
-			],
-		  })
-		  tags.push(tag2)
-		}
-		*/		
-		/*
-		const ptu = new UnicodeString(postText)
-		const be = ptu.utf16IndexToUtf8Index(7) + 1
-		facets.push({
-			index: {
-				byteStart : 0,
-				byteEnd : be,
-			},
-			features: [{
-				tag: 'hashtag',
-				$type: 'app.bsky.richtext.facet#tag',
-			}],
-		})
-
-
-		for (const [key, value] of sortedTagCountMap) {
-			Trace.debug('key = ' + key + ', value = ' + value)
-			//postText += ` ${i} : #${key} (${value})\n`
-			postText += ' ' + i + ' : '
-
-			const byteStart = (new TextEncoder()).encode(postText).byteLength;
-    		const byteEnd = byteStart + (new TextEncoder()).encode(key).byteLength + 1;
-			const byteSlice = {
-				byteStart,
-				byteEnd,
-			}
-			facets.push({
-				index: byteSlice,
-				features: [{
-					tag: key,
-					$type: 'app.bsky.richtext.facet#tag',
-				}],
-			})
-			postText += '#' + key + ' (' + value + ')\n'
-
-			i++
-			if (i > tagCount) {
-				break
-			}
-		}
-
-		const agent2 = new BskyAgent({ service: env.bskyServiceUrl })
-		await agent2.login({ identifier: '', password: '' })
-
-		const postRes = await agent2.post({
-			//$type: 'app.bsky.feed.post',
-			text: postText,
-			fasets: facets,
-			//tags,
-			createdAt: new Date().toISOString()
-		  })
-
-		Trace.debug('handlerFt 5 uri = ' + postRes.uri)
-		const uri = postRes.uri
-		//const uri = ''
-		let feed = [{ post: uri }]
-		const cursor = ''
-		return {
-			cursor,
-			feed,
-		}
-		*/
 	}
 }
 
