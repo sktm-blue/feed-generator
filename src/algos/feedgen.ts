@@ -12,11 +12,11 @@ class AlgoImpl extends AlgoAbstract {
 	
 	// 正規表現検索する場合の取得用ワード
 	public getSearchWordForRegexpArray(): string[] {
-		return [ 'feedgen', 'generator', 'フィードサーバ', 'フィードジェネレータ', 'indexer' ]
+		return [ 'feedgen', 'generator', 'フィードサーバ', 'フィードジェネレータ' ]
 	}
 	// 正規表現検索時のパターン
 	public getRegexpPattern(): string {
-		return '[^=]feedgen|feed[-\s]*generator|フィード(サーバ|ジェネレータ)|indexer[^r]'
+		return '[^=]feedgen|feed.{0,1}generator|フィード(サーバ|ジェネレータ)'
 	}
 
 	// 表示言語設定

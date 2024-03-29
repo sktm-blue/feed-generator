@@ -11,11 +11,11 @@ class AlgoImplAll extends AlgoAbstract {
 	
 	// 正規表現検索する場合の取得用ワード
 	public getSearchWordForRegexpArray(): string[] {
-		return [ 'omegacrafter', 'オメガクラフター' ]
+		return [ 'omegacrafter', 'オメガクラフタ' ]
 	}
 	// 正規表現検索時のパターン
 	public getRegexpPattern(): string {
-		return 'omega.{0,1}crafter|オメガクラフター'
+		return 'omega.{0,1}crafter|オメガ.{0,1}クラフタ'
 	}
 
 	// 表示言語設定
